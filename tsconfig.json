@@ -1,0 +1,25 @@
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "Node",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "composite": true,
+    "declaration": true,
+    "declarationMap": true,
+    "baseUrl": ".",
+    "paths": {
+      "@ferderer/texivia-micro": ["packages/micro-router/src/texivia-micro.ts"],
+      "@ferderer/texivia-full": ["packages/full-router/src/texivia.ts"]
+    }
+  },
+  "references": [
+    { "path": "packages/micro-router/tsconfig.json" },
+    { "path": "packages/full-router/tsconfig.json" }
+  ],
+  "include": [],
+  "exclude": ["node_modules", "dist"]
+}

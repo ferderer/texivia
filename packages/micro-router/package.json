@@ -1,0 +1,44 @@
+{
+  "name": "@ferderer/texivia-micro",
+  "version": "1.0.0",
+  "description": "A lightweight, fast TypeScript SPA router",
+  "author": "Vadim Ferderer (https://github.com/ferderer)",
+  "main": "dist/texivia-micro.js",
+  "module": "dist/texivia-micro.mjs",
+  "types": "dist/texivia-micro.d.ts",
+  "type": "module",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "vite build",
+    "dev": "vite",
+    "test": "vitest",
+    "lint": "eslint src --ext .ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ferderer/texivia.git",
+    "directory": "packages/micro-router"
+  },
+  "devDependencies": {
+    "@rollup/plugin-terser": "^0.4.4",
+    "@types/node": "^22.7.4",
+    "eslint": "^8.57.0",
+    "jsdom": "^26.1.0",
+    "terser": "^5.39.0",
+    "typescript": "^5.6.3",
+    "vite": "^5.4.8",
+    "vitest": "^3.1.2"
+  },
+  "keywords": [
+    "typescript",
+    "router",
+    "spa"
+  ],
+  "license": "Apache License 2.0",
+  "publishConfig": {
+    "access": "public"
+  }
+}
