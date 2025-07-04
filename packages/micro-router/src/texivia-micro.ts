@@ -1,40 +1,33 @@
 /**
+ * A hook function type that can be used as a route handler.
+ *
+ * @template T - The type of view or data associated with the route.
+ * @param match - The matched route object, containing route details and parameters.
+ * @returns A boolean, string, T, or a Promise resolving to one of these types.
+ *   - If `false`, navigation is cancelled.
+ *   - If a `string`, navigation is redirected to the given path.
+ *   - If `T`, the view/data is used for the route.
+ *   - If `true`, navigation proceeds as normal.
+ */
+type HookType<T> = (match: MatchedRoute<T>) => string | MatchedRoute<T> | Promise<string | MatchedRoute<T>>
+
+/**
  * Configuration for a route in the router
  * @template T The type of view associated with routes
  */
-type RouteConfig<T> = {
-  path: string;
-  redirect?: string;
-  handler?: (match: MatchedRoute<T>) => boolean | string | T | Promise<boolean | string | T>;
-  view?: T;
-};
+type ConfigRoute<T> = T & { path: string, redirect?: string, handler?: HookType<T> }
 
 /**
  * Internal representation of a compiled route with regex for parameter matching
  * @template T The type of view associated with routes
  */
-type CompiledRoute<T> = {
-  path: string;
-  redirect?: string;
-  handler?: Function;
-  view?: T;
-  paramRegex: RegExp | null;
-  paramNames: Array<string>;
-};
+type CompiledRoute<T> = ConfigRoute<T> & { paramRegex: RegExp | null, paramNames: string[] }
 
 /**
  * Representation of a matched route with extracted parameters
  * @template T The type of view associated with routes
  */
-type MatchedRoute<T> = {
-  path: string;
-  redirect?: string;
-  handler?: Function;
-  view?: T;
-  params: Record<string, string>;
-  search: Record<string, string>;
-  hash: string;
-};
+type MatchedRoute<T> = CompiledRoute<T> & { params: Record<string, string>, search: Record<string, string>, hash: string }
 
 /**
  * Lightweight router for single-page applications
@@ -47,48 +40,49 @@ class Router<T = any> {
   private _routes: Array<CompiledRoute<T>> = [];
   private _boundPopState!: (event: PopStateEvent) => void
   private _boundClick!: (event: MouseEvent) => void;
+  private _boundGoto!: (event: CustomEvent) => void;
 
   /**
    * Creates a new router instance with the provided route configuration
    * @param config Array of route configurations
    */
-  constructor(config: Array<RouteConfig<T>> = []) {
+  constructor(config: Array<ConfigRoute<T>> = []) {
     let mappings: string[] = [];
-    for(const routeConfig of config) {
-      const { path, redirect, handler, view } = routeConfig;
-      if (path === '*') {
+    for(const c of config) {
+      if (c.path === '*') {
         mappings.push('(^.*$)');
-        this._routes.push({ ...routeConfig, paramRegex: null, paramNames: [] });
+        this._routes.push({ ...c, paramRegex: null, paramNames: [] });
       }
       else {
-        const matches = path.match(Router.SEGMENT_REGEX);
-        if (!matches || matches.join('') !== path)
-          throw new Error(`Malformed path: ${path}`);
+        const matches = c.path.match(Router.SEGMENT_REGEX);
+        if (!matches || matches.join('') !== c.path)
+          throw new Error(`Malformed path: ${c.path}`);
 
-        let paramRegex = '^';
+        let paramRegexString = '^';
         let mappingRegex = '(^';
-        const names: string[] = [];
-        path.replace(Router.SEGMENT_REGEX, (match: any, literal: string, param: string, rx: string, slash: string) => {
+        const paramNames: string[] = [];
+        c.path.replace(Router.SEGMENT_REGEX, (match: any, literal: string, param: string, rx: string, slash: string) => {
           if (literal) {
             const escaped = '\\/' + literal.replace(/[.*+?^${}()|[\]\\/]/g, '\\$&');
-            paramRegex += escaped;
+            paramRegexString += escaped;
             mappingRegex += escaped;
           }
           else if (param) {
-            paramRegex += `\\/(?<${param}>${rx || '[^\\/]+'})`;
+            paramRegexString += `\\/(?<${param}>${rx || '[^\\/]+'})`;
             mappingRegex += `\\/${rx || '[^\\/]+'}`;
-            names.push(param);
+            paramNames.push(param);
           }
           else if (slash) {
-            paramRegex += '\\/';
+            paramRegexString += '\\/';
             mappingRegex += '\\/';
           }
           return '';
         });
-        paramRegex += '$';
+        paramRegexString += '$';
         mappingRegex += '$)';
         mappings.push(mappingRegex);
-        this._routes.push({ path, redirect, handler, view, paramRegex: names.length ? new RegExp(paramRegex) : null, paramNames: names });
+        let paramRegex = paramNames.length ? new RegExp(paramRegexString) : null;
+        this._routes.push({ ...c, paramRegex, paramNames });
       }
     }
     this._mapping = mappings.length ? new RegExp(mappings.join('|'), 'i') : null;
@@ -105,6 +99,9 @@ class Router<T = any> {
     this._boundClick = this._onclick.bind(this);
     document.addEventListener('click', this._boundClick);
 
+    this._boundGoto = this._goto.bind(this);
+    document.addEventListener('texivia.goto', this._boundGoto as EventListener);
+
     await this._navigate(new URL(window.location.href), false);
   }
 
@@ -115,6 +112,7 @@ class Router<T = any> {
   stop(): void {
     window.removeEventListener('popstate', this._boundPopState);
     document.removeEventListener('click', this._boundClick);
+    document.removeEventListener('texivia.goto', this._boundGoto as EventListener);
   }
 
   /**
@@ -133,6 +131,11 @@ class Router<T = any> {
 
     event.preventDefault();
     await this._navigate(url, true);
+  }
+
+  public async _goto(event: CustomEvent): Promise<void> {
+    console.log('Texivia go to:', event.detail);
+    this._navigate(new URL(event.detail, window.location.origin), true);
   }
 
   /**
@@ -154,7 +157,6 @@ class Router<T = any> {
       if (!result) return null;
       if (typeof result === 'string')
         return this._navigate(new URL(result, window.location.origin), pushState);
-      match = { ...match, view: result };
     }
 
     if (pushState)
@@ -203,4 +205,4 @@ class Router<T = any> {
   }
 }
 
-export { Router };
+export { Router, type MatchedRoute };
