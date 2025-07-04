@@ -1,6 +1,6 @@
 # Texivia Router
 
-Texivia Router, from Latin "via" (way/road) and textor (weaver) – "path weaver" – is a lightweight, framework-agnostic JavaScript router that uses regex-based path matching for flexible and powerful route handling. It’s designed to work seamlessly with any JavaScript framework (like Svelte, React, or Vue) or even plain JavaScript projects. With Texivia Router, you can define named routes, handle dynamic parameters, manage redirects, and execute hooks for navigation control.
+Texivia Router, from Latin "via" (way/road) and textor (weaver) – "path weaver" – is a lightweight, framework-agnostic TypeScript router that uses combined regex-based path matching for flexible and powerful route handling. It’s designed to work seamlessly with any JavaScript framework (like Svelte, React, or Vue) or even plain JavaScript projects. With Texivia Router, you can define routes, handle dynamic parameters, manage redirects, and execute hooks for navigation control.
 
 ## Features
 Texivia Router combines power and simplicity, delivering a robust set of features to streamline routing in JavaScript applications. Here’s what it offers:
@@ -10,16 +10,12 @@ Texivia Router combines power and simplicity, delivering a robust set of feature
 - **Fast Route Matching**: Routes are compiled into a single, efficient regex pattern (e.g., /^(?<users>\/users\/[^/]+)|...|$), ensuring quick and optimized path resolution.
 - **Dynamic Path Parameters**: Create flexible routes like /users/{id:\\d+} with regex constraints, giving you precise control over parameter formats.
 - **Nesting via Components**: Easily manage nested routes within your components, offering a flexible, framework-agnostic approach to hierarchical routing.
-- **Synchronous Navigation Hooks**: Global and per-route hooks enable tasks like authentication or locale setting, with the ability to redirect—all handled synchronously for reliability.
+- **Synchronous or asynchronous Navigation Hooks**: Per-route hooks enable tasks like authentication or locale setting, with the ability to redirect the route or to cancel the navigation.
 - **Smooth History Management**: Using the History API (pushState, replaceState, popstate), it keeps navigation seamless and URLs in sync.
-- **Named Routes**: Navigate using route names instead of hardcoding URLs, enhancing code clarity and maintainability.
 - **Simple Redirects**: Define redirects directly in the configuration (e.g., /old -> /new) for effortless user redirection.
 - **Effortless 404 Handling**: A * route, named NotFound, automatically manages unmatched paths with ease.
 - **Event-Driven Design**: Each navigation fires a texivia custom event, delivering details like component name, path, and query parameters for easy integration.
 - **Relative Link Interception**: Clicks on relative links are automatically handled by the router, ensuring a fluid single-page app experience.
-
-This updated section seamlessly integrates Type-Safe Routes, highlighting the benefit of TypeScript support for catching errors at compile time, and Nesting via Components, emphasizing the ability to manage nested routes through components in a way that works across different frameworks. The tone and structure remain consistent with the original, keeping the list concise and benefit-focused.
-
 
 ## Installation
 
@@ -93,12 +89,9 @@ const router = new Router(routes, [globalHook]);
 - Return a string to redirect to that path.
 
 ## API Reference
-- `new Router(routes, hooks)`: Creates a new router instance.
+- `new Router(routes)`: Creates a new router instance.
 - `router.start()`: Starts the router and attaches event listeners.
 - `router.stop()`: Stops the router and removes event listeners.
-- `router.navigate(path, pushState = true)`: Navigates to a path.
-- `router.navigateToNamed(name, params, pushState = true)`: Navigates to a named route with parameters.
-- `router.generateUrl(name, params, query)`: Generates a URL for a named route.
 
 # Testing
 Texivia Router is thoroughly tested with Vitest, covering route matching, navigation, hooks, and edge cases. You can find the test suite in the `tests` directory.
