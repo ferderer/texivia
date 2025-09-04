@@ -1,0 +1,346 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<project
+    xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd"
+>
+    <name>FinStream SSO Server</name>
+    <groupId>pro.finstream</groupId>
+    <artifactId>pro.finstream.sso</artifactId>
+    <version>1.0.0</version>
+
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>3.5.3</version>
+        <relativePath/>
+    </parent>
+
+    <properties>
+        <java.version>21</java.version>
+
+        <argLine></argLine>
+        <debug.args>-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=8000</debug.args>
+        <spring.profiles.test>test</spring.profiles.test>
+    </properties>
+
+    <dependencies>
+        <!-- === Lombok ==================================================== -->
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- === Spring Framework ========================================== -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-security</artifactId>
+        </dependency>
+
+        <!-- === OAuth2 ==================================================== -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-oauth2-authorization-server</artifactId>
+        </dependency>
+
+        <!-- === Cryptography ============================================== -->
+        <dependency>
+            <groupId>org.bouncycastle</groupId>
+            <artifactId>bcprov-jdk18on</artifactId>
+            <version>1.81</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.bouncycastle</groupId>
+            <artifactId>bcpkix-jdk18on</artifactId>
+            <version>1.81</version>
+        </dependency>
+
+        <!-- === Validation ================================================ -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-validation</artifactId>
+        </dependency>
+
+        <!-- === JPA and Hibernate ========================================= -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-jpa</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+
+        <!-- dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-core</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-database-postgresql</artifactId>
+            <scope>runtime</scope>
+        </dependency -->
+
+        <!-- === Testing =================================================== -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>io.rest-assured</groupId>
+            <artifactId>rest-assured</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <version>3.14.0</version>
+                    <configuration>
+                        <compilerArgs>
+                            <arg>-parameters</arg>
+                            <arg>-Xlint:all,-serial,-processing</arg>
+                            <arg>-proc:full</arg>
+                        </compilerArgs>
+                        <debuglevel>lines,vars,source</debuglevel>
+                        <useIncrementalCompilation>false</useIncrementalCompilation>
+                        <showDeprecation>true</showDeprecation>
+                        <release>${java.version}</release>
+                    </configuration>
+                </plugin>
+
+                <plugin>
+                    <artifactId>maven-failsafe-plugin</artifactId>
+                    <version>3.5.3</version>
+                    <configuration>
+                        <reportsDirectory>${project.build.directory}/surefire-reports</reportsDirectory>
+                        <argLine>@{argLine} -XX:+EnableDynamicAgentLoading -Xshare:off -Dfile.encoding=UTF-8 -Dspring.profiles.active=${spring.profiles.test}</argLine>
+                    </configuration>
+                </plugin>
+
+                <plugin>
+                    <artifactId>maven-surefire-plugin</artifactId>
+                    <version>3.5.3</version>
+                    <configuration>
+                        <excludes>
+                            <exclude>**/*IT.java</exclude>
+                        </excludes>
+                        <skipTests>${skipUTs}</skipTests>
+                        <argLine>@{argLine} -XX:+EnableDynamicAgentLoading -Xshare:off -Dfile.encoding=UTF-8 -Dspring.profiles.active=${spring.profiles.test}</argLine>
+                    </configuration>
+                </plugin>
+
+                <plugin>
+                    <groupId>com.fizzed</groupId>
+                    <artifactId>fizzed-watcher-maven-plugin</artifactId>
+                    <version>1.0.6</version>
+                    <executions>
+                        <execution>
+                            <id>java</id>
+                            <configuration>
+                                <goals>
+                                    <goal>compile</goal>
+                                </goals>
+                                <watches>
+                                    <watch>
+                                        <directory>src/main/java</directory>
+                                    </watch>
+                                </watches>
+                            </configuration>
+                        </execution>
+                        <execution>
+                            <id>flyway</id>
+                            <configuration>
+                                <goals>
+                                    <goal>flyway:migrate@local</goal>
+                                </goals>
+                                <watches>
+                                    <watch>
+                                        <directory>src/main/resources/db</directory>
+                                    </watch>
+                                </watches>
+                            </configuration>
+                        </execution>
+                    </executions>
+                </plugin>
+
+                <plugin>
+                    <groupId>org.flywaydb</groupId>
+                    <artifactId>flyway-maven-plugin</artifactId>
+                    <version>${flyway.version}</version>
+                    <executions>
+                        <execution>
+                            <id>local</id>
+                            <configuration>
+                                <url>jdbc:sqlserver://localhost:1433;databaseName=ebics_gateway;trustServerCertificate=true</url>
+                                <user>gateway_user</user>
+                                <password>mWdLu7mV89Z91</password>
+                                <locations>
+                                    <location>filesystem:src/main/resources/db/migration</location>
+                                    <location>filesystem:src/main/resources/db/local</location>
+                                </locations>
+                                <baselineOnMigrate>true</baselineOnMigrate>
+                                <cleanDisabled>false</cleanDisabled>
+                            </configuration>
+                        </execution>
+                    </executions>
+                    <dependencies>
+                        <dependency>
+                            <groupId>org.postgresql</groupId>
+                            <artifactId>postgresql</artifactId>
+                            <version>${postgresql.version}</version>
+                        </dependency>
+
+                        <dependency>
+                            <groupId>org.flywaydb</groupId>
+                            <artifactId>flyway-database-postgresql</artifactId>
+                            <version>${flyway.version}</version>
+                        </dependency>
+                    </dependencies>
+                </plugin>
+
+                <plugin>
+                    <groupId>org.jacoco</groupId>
+                    <artifactId>jacoco-maven-plugin</artifactId>
+                    <version>0.8.13</version>
+                    <executions>
+                        <execution>
+                            <id>jacoco-initialize</id>
+                            <goals>
+                                <goal>prepare-agent</goal>
+                            </goals>
+                        </execution>
+                        <execution>
+                            <id>jacoco-report</id>
+                            <goals>
+                                <goal>report</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
+
+                <plugin>
+                    <groupId>org.sonarsource.scanner.maven</groupId>
+                    <artifactId>sonar-maven-plugin</artifactId>
+                    <version>5.1.0.4751</version>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+
+        <plugins>
+            <plugin>
+                <artifactId>maven-failsafe-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+
+    <profiles>
+        <profile>
+            <id>dev</id>
+            <properties>
+                <jacoco.skip>true</jacoco.skip>
+                <maven.test.skip>true</maven.test.skip>
+            </properties>
+
+            <dependencies>
+                <dependency>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-devtools</artifactId>
+                    <scope>provided</scope>
+                </dependency>
+
+                <dependency>
+                    <groupId>org.flywaydb</groupId>
+                    <artifactId>flyway-core</artifactId>
+                    <scope>runtime</scope>
+                </dependency>
+
+                <dependency>
+                    <groupId>org.flywaydb</groupId>
+                    <artifactId>flyway-sqlserver</artifactId>
+                    <scope>runtime</scope>
+                </dependency>
+            </dependencies>
+
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.springframework.boot</groupId>
+                        <artifactId>spring-boot-maven-plugin</artifactId>
+                        <configuration>
+                            <addResources>true</addResources>
+                            <jvmArguments>${debug.args}</jvmArguments>
+                            <profiles>
+                                <profile>dev</profile>
+                            </profiles>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+        <profile>
+            <id>test</id>
+            <properties>
+                <spring.profiles.test>test</spring.profiles.test>
+            </properties>
+            <build>
+                <defaultGoal>verify</defaultGoal>
+                <plugins>
+                    <plugin>
+                        <artifactId>maven-failsafe-plugin</artifactId>
+                    </plugin>
+
+                    <plugin>
+                        <groupId>org.jacoco</groupId>
+                        <artifactId>jacoco-maven-plugin</artifactId>
+                    </plugin>
+
+                    <plugin>
+                        <groupId>org.flywaydb</groupId>
+                        <artifactId>flyway-maven-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>local</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>clean</goal>
+                                    <goal>migrate</goal>
+                                </goals>
+                                <configuration>
+                                    <locations>
+                                        <location>filesystem:src/main/resources/db/migration</location>
+                                        <location>filesystem:src/main/resources/db/local</location>
+                                        <location>filesystem:src/test/resources/db/local</location>
+                                    </locations>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+    <modelVersion>4.0.0</modelVersion>
+</project>
