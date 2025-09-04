@@ -16,6 +16,7 @@ Texivia Router combines power and simplicity, delivering a robust set of feature
 - **Effortless 404 Handling**: A * route, named NotFound, automatically manages unmatched paths with ease.
 - **Event-Driven Design**: Each navigation fires a texivia custom event, delivering details like component name, path, and query parameters for easy integration.
 - **Relative Link Interception**: Clicks on relative links are automatically handled by the router, ensuring a fluid single-page app experience.
+- **Microfrontend Support**: [Microfrontend Support in Texivia Router](microfrontends.md)
 
 ## Installation
 
