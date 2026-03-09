@@ -1,0 +1,140 @@
+recipe-builder/
+├── public/
+│   ├── index.html
+│   ├── favicon.ico
+│   ├── manifest.json
+│   └── images/
+│       ├── placeholder-recipe.jpg
+│       ├── hero-bg.jpg
+│       └── icons/
+│           ├── cook.svg
+│           ├── timer.svg
+│           ├── share.svg
+│           └── save.svg
+├── src/
+│   ├── main.js
+│   ├── App.svelte
+│   ├── router.js
+│   ├── stores/
+│   │   ├── auth.js
+│   │   ├── recipes.js
+│   │   ├── nutrition.js
+│   │   ├── shopping.js
+│   │   ├── collections.js
+│   │   ├── user.js
+│   │   └── ui.js
+│   ├── lib/
+│   │   ├── api.js
+│   │   ├── utils.js
+│   │   ├── constants.js
+│   │   ├── validation.js
+│   │   ├── nutrition-calculator.js
+│   │   ├── cost-estimator.js
+│   │   ├── recipe-scaler.js
+│   │   └── ingredient-database.js
+│   ├── components/
+│   │   ├── layout/
+│   │   │   ├── Header.svelte
+│   │   │   ├── Footer.svelte
+│   │   │   ├── Sidebar.svelte
+│   │   │   ├── MobileNav.svelte
+│   │   │   └── Layout.svelte
+│   │   ├── recipe/
+│   │   │   ├── RecipeCard.svelte
+│   │   │   ├── RecipeHero.svelte
+│   │   │   ├── RecipeDetail.svelte
+│   │   │   ├── RecipeGrid.svelte
+│   │   │   ├── RecipeList.svelte
+│   │   │   ├── IngredientList.svelte
+│   │   │   ├── InstructionSteps.svelte
+│   │   │   ├── NutritionPanel.svelte
+│   │   │   ├── RecipeRating.svelte
+│   │   │   ├── RecipeActions.svelte
+│   │   │   └── RelatedRecipes.svelte
+│   │   ├── forms/
+│   │   │   ├── RecipeWizard.svelte
+│   │   │   ├── BasicInfoStep.svelte
+│   │   │   ├── IngredientsStep.svelte
+│   │   │   ├── InstructionsStep.svelte
+│   │   │   ├── PhotosStep.svelte
+│   │   │   ├── ReviewStep.svelte
+│   │   │   ├── IngredientSearch.svelte
+│   │   │   ├── ImageUpload.svelte
+│   │   │   ├── PortionAdjuster.svelte
+│   │   │   ├── InstructionEditor.svelte
+│   │   │   ├── LoginForm.svelte
+│   │   │   └── RegisterForm.svelte
+│   │   ├── interactive/
+│   │   │   ├── FilterSidebar.svelte
+│   │   │   ├── SearchAutocomplete.svelte
+│   │   │   ├── SearchBar.svelte
+│   │   │   ├── CollectionManager.svelte
+│   │   │   ├── CollectionModal.svelte
+│   │   │   ├── ShoppingCartSummary.svelte
+│   │   │   ├── CookingModeUI.svelte
+│   │   │   ├── MealPlanCalendar.svelte
+│   │   │   ├── TimerWidget.svelte
+│   │   │   └── SubstitutionSuggestions.svelte
+│   │   ├── ui/
+│   │   │   ├── Button.svelte
+│   │   │   ├── Input.svelte
+│   │   │   ├── TextArea.svelte
+│   │   │   ├── Select.svelte
+│   │   │   ├── Checkbox.svelte
+│   │   │   ├── Radio.svelte
+│   │   │   ├── Modal.svelte
+│   │   │   ├── Dropdown.svelte
+│   │   │   ├── Tabs.svelte
+│   │   │   ├── Card.svelte
+│   │   │   ├── Badge.svelte
+│   │   │   ├── Loading.svelte
+│   │   │   ├── Toast.svelte
+│   │   │   ├── Tooltip.svelte
+│   │   │   ├── Pagination.svelte
+│   │   │   ├── Toggle.svelte
+│   │   │   ├── Slider.svelte
+│   │   │   ├── ProgressBar.svelte
+│   │   │   └── StarRating.svelte
+│   │   └── charts/
+│   │       ├── NutritionChart.svelte
+│   │       ├── PieChart.svelte
+│   │       ├── BarChart.svelte
+│   │       └── MacroBreakdown.svelte
+│   ├── pages/
+│   │   ├── Home.svelte
+│   │   ├── Recipes.svelte
+│   │   ├── RecipeDetail.svelte
+│   │   ├── Search.svelte
+│   │   ├── Collections.svelte
+│   │   ├── CollectionDetail.svelte
+│   │   ├── Login.svelte
+│   │   ├── Register.svelte
+│   │   ├── ForgotPassword.svelte
+│   │   ├── Dashboard.svelte
+│   │   ├── CreateRecipe.svelte
+│   │   ├── EditRecipe.svelte
+│   │   ├── MyRecipes.svelte
+│   │   ├── MyCollections.svelte
+│   │   ├── ShoppingList.svelte
+│   │   ├── MealPlanner.svelte
+│   │   ├── CookingMode.svelte
+│   │   ├── Profile.svelte
+│   │   ├── NutritionGoals.svelte
+│   │   ├── UserProfile.svelte
+│   │   └── NotFound.svelte
+│   ├── styles/
+│   │   ├── global.css
+│   │   ├── variables.css
+│   │   ├── components.css
+│   │   ├── utilities.css
+│   │   └── responsive.css
+│   └── data/
+│       ├── sample-recipes.json
+│       ├── ingredients.json
+│       ├── nutrition-database.json
+│       └── cuisines.json
+├── package.json
+├── vite.config.js
+├── .gitignore
+├── README.md
+└── .env.example
