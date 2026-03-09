@@ -1,8 +1,8 @@
 {
   "name": "texivia-router",
   "version": "1.0.0",
-  "description": "2 KB framework-agnostic TypeScript router with compiled regex matching",
-  "author": "Vadim Ferderer (https://github.com/ferderer)",
+  "description": "3 kB framework-agnostic TypeScript router with compiled regex matching",
+  "author": "Vadim Ferderer (https://ferderer.de/)",
   "license": "Apache-2.0",
   "main": "dist/texivia.js",
   "module": "dist/texivia.mjs",
@@ -40,10 +40,10 @@
     "typescript",
     "framework-agnostic",
     "lightweight",
+    "single-page-app",
     "svelte",
     "vue",
-    "react",
-    "2kb"
+    "react"
   ],
   "devDependencies": {
     "@rollup/plugin-terser": "^0.4.4",
