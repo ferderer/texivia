@@ -1,0 +1,61 @@
+{
+  "name": "texivia-router",
+  "version": "1.0.0",
+  "description": "2 KB framework-agnostic TypeScript router with compiled regex matching",
+  "author": "Vadim Ferderer (https://github.com/ferderer)",
+  "license": "Apache-2.0",
+  "main": "dist/texivia.js",
+  "module": "dist/texivia.mjs",
+  "types": "dist/texivia.d.ts",
+  "type": "module",
+  "files": [
+    "dist"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/texivia.d.ts",
+      "import": "./dist/texivia.mjs",
+      "require": "./dist/texivia.js"
+    }
+  },
+  "scripts": {
+    "build": "vite build",
+    "dev": "vite",
+    "test": "vitest",
+    "lint": "eslint src --ext .ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ferderer/texivia.git"
+  },
+  "homepage": "https://ferderer.de/projects/texivia",
+  "bugs": {
+    "url": "https://github.com/ferderer/texivia/issues"
+  },
+  "keywords": [
+    "router",
+    "routing",
+    "spa",
+    "typescript",
+    "framework-agnostic",
+    "lightweight",
+    "svelte",
+    "vue",
+    "react",
+    "2kb"
+  ],
+  "devDependencies": {
+    "@rollup/plugin-terser": "^0.4.4",
+    "@types/node": "^22.7.4",
+    "eslint": "^8.57.0",
+    "jsdom": "^26.1.0",
+    "terser": "^5.39.0",
+    "typescript": "^5.6.3",
+    "vite": "^5.4.8",
+    "vitest": "^3.1.2"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
