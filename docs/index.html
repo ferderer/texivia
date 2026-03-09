@@ -1,0 +1,387 @@
+<!doctype html>
+<html lang='en'>
+
+<head>
+    <title>Texivia Router - Vadim Ferderer</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description"
+        content="2 KB framework-agnostic TypeScript router with compiled regex matching. Works with Svelte, Vue, React, or vanilla JS.">
+
+    <meta property="og:title" content="Texivia Router - Vadim Ferderer">
+    <meta property="og:description"
+        content="2 KB router. Zero dependencies. Any framework. Compiled regex matching, event-driven, type-safe.">
+    <meta property="og:url" content="https://ferderer.de/projects/texivia">
+
+    <link rel="canonical" href="https://ferderer.de/projects/texivia">
+
+    <link href="/_/icons/favicon-32x32.png" rel="icon" type="image/png" sizes="32x32">
+    <link href="/_/icons/favicon-16x16.png" rel="icon" type="image/png" sizes="16x16">
+    <link href="/_/styles.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+    <style>
+        /* Texivia docs — extends styles.css */
+        .hero { margin-bottom: 2rem; }
+        .hero .tagline { font-size: 1.15rem; color: #555; margin-bottom: 0.25rem; }
+        .hero .etymology { font-size: 0.85rem; color: #777; font-style: italic; margin-bottom: 1rem; }
+        .hero .badges { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1rem; }
+        .hero .badges img { height: 20px; }
+        .hero .install {
+            background: #f5f5f5; border: 1px solid #e0e0e0; border-radius: 4px;
+            padding: 0.5rem 1rem; font-family: "SF Mono", "Fira Code", Menlo, Consolas, monospace;
+            font-size: 0.9rem; display: inline-block;
+        }
+
+        .comparison-table { width: 100%; border-collapse: collapse; margin: 1rem 0 1.5rem; font-size: 0.9rem; }
+        .comparison-table th { text-align: left; font-weight: 600; padding: 0.5rem 0.75rem; border-bottom: 2px solid #e0e0e0; }
+        .comparison-table td { padding: 0.5rem 0.75rem; border-bottom: 1px solid #e0e0e0; }
+
+        pre { background: #f5f5f5; border: 1px solid #e0e0e0; border-radius: 4px; padding: 1rem 1.25rem; overflow-x: auto; margin: 0.75rem 0 1.25rem; line-height: 1.5; }
+        pre code { background: none; padding: 0; font-size: 0.85rem; border: none; }
+        code { font-family: "SF Mono", "Fira Code", Menlo, Consolas, monospace; font-size: 0.875em; background: #f5f5f5; padding: 0.15em 0.35em; border-radius: 3px; }
+
+        .code-label { font-size: 0.8rem; color: #777; margin-bottom: 0.25rem; font-family: "SF Mono", "Fira Code", Menlo, Consolas, monospace; }
+
+        .feature { margin-bottom: 1.25rem; }
+        .feature p { margin-bottom: 0.5rem; }
+
+        .api-item { margin-bottom: 1.75rem; }
+        .api-item h3 code { font-weight: 600; font-size: 0.95rem; }
+        .api-item ul { margin: 0.5rem 0 1rem 1.25rem; }
+        .api-item li { margin-bottom: 0.35rem; font-size: 0.95rem; }
+    </style>
+</head>
+
+<body>
+  <header>
+    <a href="/" class="brand">Vadim Ferderer</a>
+    <nav>
+      <a href="/blog/">Blog</a>
+      <a href="/projects">Projects</a>
+      <a href="/about">About</a>
+    </nav>
+  </header>
+
+  <main>
+    <div class="hero">
+      <h1>Texivia</h1>
+      <div class="tagline">2 KB router. Zero dependencies. Any framework.</div>
+      <div class="etymology">From Latin textor (weaver) + via (road) — "path weaver."</div>
+      <vf-tags>#router · #typescript · #framework-agnostic · #svelte · #vue</vf-tags>
+      <div class="badges">
+        <a href="https://bundlephobia.com/package/texivia-router"><img src="https://img.shields.io/bundlephobia/minzip/texivia-router" alt="Bundle Size"></a>
+        <a href="https://www.npmjs.com/package/texivia-router"><img src="https://img.shields.io/npm/v/texivia-router" alt="npm version"></a>
+        <img src="https://img.shields.io/badge/TypeScript-Ready-blue" alt="TypeScript">
+        <a href="https://opensource.org/licenses/Apache-2.0"><img src="https://img.shields.io/badge/License-Apache%202.0-green.svg" alt="License"></a>
+      </div>
+      <div class="install">npm install texivia-router</div>
+    </div>
+
+    <!-- Why Texivia -->
+    <section>
+      <h2>Why Texivia?</h2>
+      <table class="comparison-table">
+        <thead>
+          <tr><th></th><th>React Router</th><th>Vue Router</th><th>Texivia</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Size (min+gzip)</td><td>12.4 KB</td><td>9.8 KB</td><td><strong>2 KB</strong></td></tr>
+          <tr><td>Framework lock-in</td><td>React</td><td>Vue</td><td><strong>None</strong></td></tr>
+          <tr><td>Route matching</td><td>Runtime</td><td>Runtime</td><td><strong>Compiled regex</strong></td></tr>
+          <tr><td>Navigation API</td><td>Proprietary</td><td>Proprietary</td><td><strong>DOM events</strong></td></tr>
+        </tbody>
+      </table>
+      <p>Texivia compiles all routes into a single regex at startup. Matching is a single <code>exec()</code> call — O(1) regardless of route count.</p>
+    </section>
+
+    <!-- Quick Start -->
+    <section>
+      <h2>Quick Start</h2>
+      <pre><code class="language-typescript">import { Router } from 'texivia-router';
+
+const router = new Router([
+  { path: '/', view: Home },
+  { path: '/recipe/{id}', view: RecipeDetail },
+  { path: '*', view: NotFound }
+]);
+
+router.start();
+
+document.addEventListener('texivia', (e) =&gt; {
+  const { view, params, search, hash } = e.detail;
+  // render your app — view is whatever you put in the config
+});</code></pre>
+      <p>That's it. No providers, no wrappers, no context.</p>
+    </section>
+
+    <!-- Svelte 5 -->
+    <section>
+      <h2>Svelte 5</h2>
+      <p>Extract the router into its own module so any component or service can import it:</p>
+
+      <div class="code-label">src/router.ts</div>
+      <pre><code class="language-typescript">import { Router } from 'texivia-router';
+import type { Component } from 'svelte';
+import Home from './pages/Home.svelte';
+import RecipeDetail from './pages/RecipeDetail.svelte';
+import NotFound from './pages/NotFound.svelte';
+
+export const router = new Router&lt;Component&lt;any&gt;&gt;([
+  { path: '/', view: Home },
+  { path: '/recipe/{id}', view: RecipeDetail },
+  { path: '*', view: NotFound },
+]);</code></pre>
+
+      <div class="code-label">App.svelte</div>
+      <pre><code class="language-xml">&lt;script lang="ts"&gt;
+  import { onMount } from 'svelte';
+  import { router } from './router';
+
+  let View = $state(null);
+  let params = $state({});
+
+  function onNavigate(event: CustomEvent) {
+    View = event.detail.view;
+    params = event.detail?.params || {};
+  }
+
+  onMount(() =&gt; {
+    router.start();
+    document.addEventListener('texivia', onNavigate as EventListener);
+    return () =&gt; {
+      router.stop();
+      document.removeEventListener('texivia', onNavigate as EventListener);
+    };
+  });
+&lt;/script&gt;
+
+{#if View}
+  &lt;View {...params} /&gt;
+{/if}</code></pre>
+
+      <p>The <code>view</code> property holds the Svelte component directly — no string-to-component lookup. <code>Router&lt;Component&lt;any&gt;&gt;</code> gives you full type safety across the config.</p>
+      <p>No <code>&lt;Link&gt;</code> components. Plain <code>&lt;a&gt;</code> tags just work — Texivia intercepts relative links automatically. For programmatic navigation, import the router:</p>
+
+      <pre><code class="language-typescript">// anywhere — a service, a handler, another component
+import { router } from './router';
+router.navigate('/dashboard');</code></pre>
+
+      <h3>Nested layouts</h3>
+      <p>Texivia doesn't need a nested routing concept. Use your framework's composition instead:</p>
+
+      <div class="code-label">pages/RecipeDetail.svelte</div>
+      <pre><code class="language-xml">&lt;script lang="ts"&gt;
+  import Layout from '../components/layout/Layout.svelte';
+  const { id } = $props();
+&lt;/script&gt;
+
+&lt;Layout&gt;
+  {#snippet body()}
+    &lt;h1&gt;Recipe #{id}&lt;/h1&gt;
+    &lt;!-- page content --&gt;
+  {/snippet}
+&lt;/Layout&gt;</code></pre>
+
+      <p>Layouts are components, not router config. This keeps the router simple and your layouts flexible.</p>
+    </section>
+
+    <!-- Vue 3 -->
+    <section>
+      <h2>Vue 3</h2>
+
+      <div class="code-label">src/router.ts</div>
+      <pre><code class="language-typescript">import { Router } from 'texivia-router';
+import type { Component } from 'vue';
+import Home from './pages/Home.vue';
+import RecipeDetail from './pages/RecipeDetail.vue';
+import NotFound from './pages/NotFound.vue';
+
+export const router = new Router&lt;Component&gt;([
+  { path: '/', view: Home },
+  { path: '/recipe/{id}', view: RecipeDetail },
+  { path: '*', view: NotFound },
+]);</code></pre>
+
+      <div class="code-label">App.vue</div>
+      <pre><code class="language-xml">&lt;script setup lang="ts"&gt;
+import { shallowRef, ref, onMounted, onUnmounted } from 'vue';
+import { router } from './router';
+import Home from './pages/Home.vue';
+
+const View = shallowRef(Home);
+const params = ref&lt;Record&lt;string, string&gt;&gt;({});
+
+function onNavigate(event: Event) {
+  const detail = (event as CustomEvent).detail;
+  View.value = detail.view;
+  params.value = detail?.params || {};
+}
+
+onMounted(() =&gt; {
+  router.start();
+  document.addEventListener('texivia', onNavigate);
+});
+
+onUnmounted(() =&gt; {
+  router.stop();
+  document.removeEventListener('texivia', onNavigate);
+});
+&lt;/script&gt;
+
+&lt;template&gt;
+  &lt;component :is="View" v-bind="params" /&gt;
+&lt;/template&gt;</code></pre>
+
+      <p>Same pattern — shared <code>router.ts</code>, import where you need <code>router.navigate()</code>.</p>
+    </section>
+
+    <!-- Features -->
+    <section>
+      <h2>Features</h2>
+
+      <div class="feature">
+        <p><strong>Compiled regex matching</strong> — All routes become one regex. One <code>exec()</code> per navigation, regardless of route count.</p>
+      </div>
+
+      <div class="feature">
+        <p><strong>Framework-agnostic</strong> — Works with Svelte, Vue, React, or vanilla JS. No adapters, no plugins. Standard DOM events in, DOM events out.</p>
+      </div>
+
+      <div class="feature">
+        <p><strong>Type-safe</strong> — Generic <code>Router&lt;T&gt;</code> lets you type your view data. Route configs, matched routes, and handler signatures are fully typed.</p>
+      </div>
+
+      <div class="feature">
+        <p><strong>Dynamic parameters with constraints</strong> — <code>{id}</code> matches any segment. <code>{id:\d+}</code> matches only digits. <code>{slug:[a-z-]+}</code> matches only lowercase slugs. Full regex power per segment.</p>
+      </div>
+
+      <div class="feature">
+        <p><strong>Async navigation handlers</strong> — Per-route <code>handler</code> functions run before navigation. Return <code>true</code> to proceed, <code>false</code> to cancel, or a string to redirect.</p>
+        <pre><code class="language-typescript">const router = new Router([
+  {
+    path: '/dashboard',
+    view: Dashboard,
+    handler: async (match) =&gt; {
+      if (!await isAuthenticated()) return '/login';
+      await preloadData(match.params);
+      return true;
+    }
+  }
+]);</code></pre>
+      </div>
+
+      <div class="feature">
+        <p><strong>Automatic link interception</strong> — Clicks on relative <code>&lt;a&gt;</code> tags are captured and routed. External links, <code>target="_blank"</code>, <code>download</code>, and <code>no-router</code> attributes are ignored.</p>
+        <pre><code class="language-html">&lt;a href="/recipes/42"&gt;Recipe&lt;/a&gt;        &lt;!-- intercepted --&gt;
+&lt;a href="https://example.com"&gt;Ext&lt;/a&gt;   &lt;!-- ignored: external --&gt;
+&lt;a href="/file.pdf" download&gt;PDF&lt;/a&gt;    &lt;!-- ignored: download --&gt;
+&lt;a href="/raw" no-router&gt;Raw&lt;/a&gt;        &lt;!-- ignored: opt-out --&gt;</code></pre>
+      </div>
+
+      <div class="feature">
+        <p><strong>Declarative redirects</strong> — <code>{ path: '/old', redirect: '/new' }</code> in the config. No imperative redirect logic needed.</p>
+      </div>
+
+      <div class="feature">
+        <p><strong>Catch-all 404</strong> — <code>{ path: '*' }</code> matches anything not matched by other routes. Place it last in your config.</p>
+      </div>
+
+      <div class="feature">
+        <p><strong>Event-driven</strong> — Every navigation dispatches a <code>texivia</code> CustomEvent on <code>document</code> with full route detail: <code>view</code>, <code>params</code>, <code>search</code>, <code>hash</code>.</p>
+      </div>
+
+      <div class="feature">
+        <p><strong>Programmatic navigation</strong> — Call <code>router.navigate()</code> from anywhere:</p>
+        <pre><code class="language-typescript">router.navigate('/recipes/42');
+router.navigate('/search?q=pasta#results');</code></pre>
+      </div>
+
+      <div class="feature">
+        <p><strong>History API</strong> — Uses <code>pushState</code>/<code>popstate</code> for clean URLs. No hash routing.</p>
+      </div>
+
+      <div class="feature">
+        <p><strong>Nesting through composition</strong> — No nested route config. Use your framework's own layout/slot/snippet system. The router stays flat, your component tree stays flexible.</p>
+      </div>
+    </section>
+
+    <!-- API -->
+    <section>
+      <h2>API</h2>
+
+      <div class="api-item">
+        <h3><code>new Router&lt;T&gt;(config)</code></h3>
+        <p>Creates a router instance. <code>config</code> is an array of route objects:</p>
+        <pre><code class="language-typescript">type ConfigRoute&lt;T&gt; = {
+  path: string;
+  view?: T;
+  redirect?: string;
+  handler?: (match: MatchedRoute&lt;T&gt;) =&gt; string | boolean | Promise&lt;string | boolean&gt;;
+};</code></pre>
+        <ul>
+          <li><code>path</code> — URL pattern. Literal segments, <code>{param}</code> or <code>{param:regex}</code> for dynamic segments, <code>*</code> for catch-all.</li>
+          <li><code>view</code> — The view or component to render for this route.</li>
+          <li><code>redirect</code> — Target path for redirects.</li>
+          <li><code>handler</code> — Async or sync function called before navigation. Return <code>true</code> to proceed, <code>false</code> to cancel, or a string to redirect.</li>
+        </ul>
+      </div>
+
+      <div class="api-item">
+        <h3><code>router.start(): Promise&lt;void&gt;</code></h3>
+        <p>Starts the router. Attaches <code>popstate</code>, <code>click</code>, and <code>texivia.goto</code> listeners. Navigates to the current URL.</p>
+      </div>
+
+      <div class="api-item">
+        <h3><code>router.stop(): void</code></h3>
+        <p>Removes all event listeners. Call on cleanup.</p>
+      </div>
+
+      <div class="api-item">
+        <h3><code>router.navigate(path): Promise&lt;MatchedRoute&lt;T&gt; | null&gt;</code></h3>
+        <p>Navigates to the given path. Runs handlers, pushes history state, and dispatches the <code>texivia</code> event. Returns the matched route or <code>null</code> if no route matches.</p>
+        <pre><code class="language-typescript">await router.navigate('/recipe/42');
+await router.navigate('/search?q=pasta#results');</code></pre>
+      </div>
+
+      <div class="api-item">
+        <h3>Event: <code>texivia</code></h3>
+        <p>Dispatched on <code>document</code> after each successful navigation.</p>
+        <pre><code class="language-typescript">type MatchedRoute&lt;T&gt; = {
+  path: string;
+  view?: T;
+  params: Record&lt;string, string&gt;;
+  search: Record&lt;string, string&gt;;
+  hash: string;
+};
+
+document.addEventListener('texivia', (e: CustomEvent&lt;MatchedRoute&lt;T&gt;&gt;) =&gt; {
+  const { view, params, search, hash } = e.detail;
+});</code></pre>
+      </div>
+    </section>
+
+    <!-- Testing -->
+    <section>
+      <h2>Testing</h2>
+      <p>Tested with <a href="https://vitest.dev/">Vitest</a> covering route matching, navigation, handlers, redirects, link interception, and edge cases.</p>
+      <pre><code class="language-bash">npm test</code></pre>
+    </section>
+
+    <!-- Source -->
+    <section>
+      <h2>Source</h2>
+      <p><a href="https://github.com/ferderer/texivia">github.com/ferderer/texivia</a> · Apache 2.0</p>
+    </section>
+  </main>
+
+  <footer>
+    <a href="https://github.com/ferderer">GitHub</a> ·
+    <a href="https://www.linkedin.com/in/vadim-ferderer-18410b26b/">LinkedIn</a> ·
+    <a href="https://x.com/VadimFerderer">X</a> ·
+    <a href="/cdn-cgi/l/email-protection#34555f45415d47517452514650514651461a5051"><span class="__cf_email__" data-cfemail="63020812160a10062305061107061106114d0706">[email&#160;protected]</span></a>
+    <br>© 2026 Vadim Ferderer
+  </footer>
+
+  <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/typescript.min.js"></script>
+  <script src="https://cdn
