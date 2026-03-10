@@ -17,7 +17,7 @@ npm install texivia-router
 
 | | React Router | Vue Router | Texivia |
 |--|-------------|------------|---------|
-| Size (min+gzip) | 12.4 KB | 9.8 KB | **3 KB** |
+| Size (min+gzip) | 12.4 KB | 9.8 KB | **1.4 KB** |
 | Framework lock-in | React | Vue | **None** |
 | Route matching | Runtime | Runtime | **Compiled regex** |
 | Navigation API | Proprietary | Proprietary | **DOM events** |
