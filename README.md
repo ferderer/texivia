@@ -4,6 +4,8 @@
 
 From Latin *textor* (weaver) + *via* (road) — "path weaver."
 
+![Frontend Routers — The Reality Check](docs/comparison.png)
+
 [![Bundle Size](https://img.shields.io/bundlephobia/minzip/texivia-router)](https://bundlephobia.com/package/texivia-router)
 [![npm version](https://img.shields.io/npm/v/texivia-router)](https://www.npmjs.com/package/texivia-router)
 [![TypeScript](https://img.shields.io/badge/TypeScript-Ready-blue)](https://www.typescriptlang.org/)
@@ -15,12 +17,17 @@ npm install texivia-router
 
 ## Why Texivia?
 
-| | React Router | Vue Router | Texivia |
-|--|-------------|------------|---------|
-| Size (min+gzip) | 12.4 KB | 9.8 KB | **1.4 KB** |
-| Framework lock-in | React | Vue | **None** |
-| Route matching | Runtime | Runtime | **Compiled regex** |
-| Navigation API | Proprietary | Proprietary | **DOM events** |
+|         | TanStack | Vue Router | navigo | wouter | **Texivia** |
+|---------|--------:|-----------:|-------:|-------:|------------:|
+| LOC     |  11,561 |  2,503 | 1,007 | 420 | **160** |
+| Gzipped | 31.6 kB | 3.5 kB | 2.9 kB | 2.5 kB | **1.4 kB** |
+| Files   |      58 |     32 | 8 | 20 | **1** |
+| Deps    |       7 | 17 | 0 | 3 | **0** |
+| Svelte  |       – | – | ✓ | – | **✓** |
+| React   |       ✓ | – | ✓ | ✓ | **✓** |
+| Vue     |       – | ✓ | ✓ | – | **✓** |
+| Angular |       – | – | ✓ | – | **✓** |
+| Vanilla |       – | – | ✓ | – | **✓** |
 
 Texivia compiles all routes into a single regex at startup. Matching is a single `exec()` call — O(1) regardless of route count.
 
