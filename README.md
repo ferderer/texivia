@@ -1,6 +1,6 @@
 # Texivia
 
-**3 kB router. Zero dependencies. Any framework.**
+**1.2 kB router. Zero dependencies. Any framework.**
 
 From Latin *textor* (weaver) + *via* (road) — "path weaver."
 
