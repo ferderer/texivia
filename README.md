@@ -300,3 +300,5 @@ npm test
 ## License
 
 [Apache 2.0](LICENSE)
+
+Maintained by [Vadim Ferderer](https://ferderer.de).
