@@ -38,7 +38,7 @@ Framework examples: build the router first, then `cd examples/<fw>/<app> && npm 
 - `texivia-reactive` must stay first in the root `workspaces` array – npm runs workspace scripts in that order, not by dependency.
 - Internal dependencies use semver ranges (`"texivia-reactive": "^1.0.0"`), never `workspace:*` (npm does not support it and would publish ranges literally).
 
-Known failure (2026-11-09): `texivia-fetch` test `returns E_ABORTED …` – `err instanceof Error` is false for jsdom's DOMException in Vitest; checking `err.name` alone would fix it.
+All suites pass (2026-11-09).
 
 ## Release
 
@@ -62,7 +62,7 @@ Changesets + npm trusted publishing (`.github/workflows/release.yml`). Merging t
 - Packages are unscoped and prefixed `texivia-`; one responsibility each; keep the dependency tree flat (component→reactive, store→reactive; planned: session→store, oidc→store+fetch). Never bundle another package: `libConfig()` marks dependencies as external.
 - Members starting with `_` are renamed by Terser in `dist/` (property mangling); tests that use private members must run against `src/`.
 - texivia-component delegates events on `document` in the capture phase (`.stop` stops all later listeners; focus/blur work).
-- Fetch: `apiFetch<T>` returns `{ payload, error }`; `ApiError` is the tuple `[timestamp, status, code, data, fields?]`; an aborted request is `E_ABORTED` with status 0, distinct from `E_NETWORK_ERROR`; JSON, `credentials: 'include'`.
+- Fetch: `apiFetch<T>` returns `{ payload, error }`; `ApiError` is the tuple `[timestamp, status, code, data, fields?]`; an aborted request is `E_ABORTED` with status 0, distinct from `E_NETWORK_ERROR` (detected by `err.name === 'AbortError'`, no `instanceof` – DOMException may come from another realm); JSON, `credentials: 'include'`.
 - Svelte examples: plain Svelte 5 without SvelteKit, runes only (`$props`, `$state`, `$derived` with a direct expression, `$effect`); rune stores in `.svelte.ts`; one component per file; navigate with native `<a>` links or `router.navigate()`, never `window.location.href`.
 - Tests: Vitest with jsdom, one test file per router function; same-origin URLs for `pushState`; never spread `window.location` in mocks.
 - Feature filter: add only what cannot easily be done with CSS/HTML/vanilla, is not rarely needed, and has no good small library.
