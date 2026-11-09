@@ -51,4 +51,26 @@ describe('batch()', () => {
     }, notify);
     expect(notify).toHaveBeenCalledTimes(1);
   });
+
+  it('notifies every changed reactive object once', () => {
+    const na = vi.fn();
+    const nb = vi.fn();
+    const nc = vi.fn();
+    const a = reactive({ v: 0 }, na);
+    const b = reactive({ v: 0 }, nb);
+    reactive({ v: 0 }, nc);
+    batch(() => { a.v = 1; a.v = 2; b.v = 1; });
+    expect(na).toHaveBeenCalledTimes(1);
+    expect(nb).toHaveBeenCalledTimes(1);
+    expect(nc).not.toHaveBeenCalled();
+  });
+
+  it('flushes after fn throws', () => {
+    const notify = vi.fn();
+    const state = reactive({ a: 0 }, notify);
+    expect(() => batch(() => { state.a = 1; throw new Error('x'); })).toThrow('x');
+    expect(notify).toHaveBeenCalledTimes(1);
+    state.a = 2;
+    expect(notify).toHaveBeenCalledTimes(2);
+  });
 });
