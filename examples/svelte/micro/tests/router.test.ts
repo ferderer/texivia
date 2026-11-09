@@ -26,6 +26,8 @@ describe('Router', () => {
     vi.spyOn(document, 'addEventListener');
     vi.spyOn(document, 'removeEventListener');
     vi.spyOn(document, 'dispatchEvent');
+    vi.spyOn(window.history, 'pushState');
+    vi.spyOn(window.history, 'replaceState');
 
     Object.defineProperty(global, 'location', {
       value: {
@@ -88,16 +90,16 @@ describe('Router', () => {
   // _match Method Tests
   describe('_match', () => {
     test('matches root path and triggers handler', () => {
+      // _match returns { event, redirect?, handler? }; only event is public
       const match = router['_match']('/', {}, '');
       expect(match).toMatchObject({
-        path: '/',
+        event: { path: '/', params: {} },
         handler: expect.any(Function),
-        params: {},
       });
     });
 
     test('matches parameterized route', () => {
-      const match = router['_match']('/en/users/123/profile', {}, '');
+      const match = router['_match']('/en/users/123/profile', {}, '')?.event;
       expect(match).toMatchObject({
         view: 'UserProfile',
         params: { locale: 'en', id: '123' },
@@ -105,7 +107,7 @@ describe('Router', () => {
     });
 
     test('matches wildcard route', () => {
-      const match = router['_match']('/nonexistent', {}, '');
+      const match = router['_match']('/nonexistent', {}, '')?.event;
       expect(match).toMatchObject({
         view: 'NotFound',
         params: {},
