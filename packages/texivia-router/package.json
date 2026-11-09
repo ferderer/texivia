@@ -13,13 +13,12 @@
   ],
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/texivia.mjs",
-      "require": "./dist/texivia.cjs"
+      "import":  { "types": "./dist/index.d.ts",  "default": "./dist/texivia.mjs" },
+      "require": { "types": "./dist/index.d.cts", "default": "./dist/texivia.cjs" }
     }
   },
   "scripts": {
-    "build": "vite build && tsc --emitDeclarationOnly",
+    "build": "vite build && tsc --emitDeclarationOnly && node ../../scripts/cts-types.mjs",
     "dev": "vite",
     "test": "vitest",
     "lint": "eslint src --ext .ts",

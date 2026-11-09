@@ -8,12 +8,12 @@
  */
 
 import { reactive, batch } from 'texivia-reactive';
-import { createScope, setupEvents } from './events';
-import { compile } from './compiler';
-import type { Scope } from './events';
+import { createScope, setupEvents } from './events.js';
+import { compile } from './compiler.js';
+import type { Scope } from './events.js';
 
-export { setupEvents, _resetEvents } from './events';
-export type { Scope } from './events';
+export { setupEvents, _resetEvents } from './events.js';
+export type { Scope } from './events.js';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 

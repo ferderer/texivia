@@ -11,13 +11,12 @@
   "files":  ["dist"],
   "exports": {
     ".": {
-      "types":   "./dist/index.d.ts",
-      "import":  "./dist/index.mjs",
-      "require": "./dist/index.cjs"
+      "import":  { "types": "./dist/index.d.ts",  "default": "./dist/index.mjs" },
+      "require": { "types": "./dist/index.d.cts", "default": "./dist/index.cjs" }
     }
   },
   "scripts": {
-    "build":     "vite build && tsc --emitDeclarationOnly",
+    "build":     "vite build && tsc --emitDeclarationOnly && node ../../scripts/cts-types.mjs",
     "test":      "vitest",
     "typecheck": "tsc --noEmit"
   },
