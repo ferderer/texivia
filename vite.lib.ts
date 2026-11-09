@@ -3,8 +3,16 @@
 //   import { libConfig } from '../../vite.lib';
 //   export default libConfig();                       // dist/index.{mjs,js}
 //   export default libConfig({ fileBase: 'texivia' }); // dist/texivia.{mjs,js}
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { defineConfig } from 'vite';
 import { minify } from 'terser';
+
+/** Runtime dependencies of the package being built (vite runs in the package directory). */
+function dependencies(): string[] {
+  const pkg = JSON.parse(readFileSync(resolve(process.cwd(), 'package.json'), 'utf8'));
+  return Object.keys({ ...pkg.dependencies, ...pkg.peerDependencies });
+}
 
 type LibOptions = {
   /** Entry module, relative to the package directory. */
@@ -25,6 +33,8 @@ export function libConfig({ entry = 'src/index.ts', name, fileBase = 'index' }: 
         formats: ['es', 'cjs'],
       },
       sourcemap: true,
+      // never bundle another package: consumers must share one copy (ecosystem ADR-0002)
+      rollupOptions: { external: dependencies() },
     },
     test: {
       environment: 'jsdom',
