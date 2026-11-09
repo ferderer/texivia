@@ -23,19 +23,20 @@
 
 import type { Scope } from './events';
 
-type MethodFn = (ctx: unknown, e: Event) => void;
+type MethodFn<C> = (ctx: C, e: Event) => void;
 
-export interface CompilerContext {
+/** C is the context type passed to component methods (ComponentContext in index.ts). */
+export interface CompilerContext<C = unknown> {
   getState:  (key: string) => unknown;
   setState:  (key: string, value: unknown) => void;
-  getMethod: (name: string) => MethodFn | undefined;
-  ctx:       unknown;
+  getMethod: (name: string) => MethodFn<C> | undefined;
+  ctx:       C;
   scope:     Scope;
 }
 
 // ─── Pass 1: @bind ────────────────────────────────────────────────────────────
 
-export function compileBind(html: string, cc: CompilerContext): string {
+export function compileBind<C>(html: string, cc: CompilerContext<C>): string {
   // <input @bind="key" …>
   html = html.replace(
     /(<input[^>]*?)@bind="(\w+)"([^>]*?>)/gi,
@@ -99,7 +100,7 @@ export function compileBind(html: string, cc: CompilerContext): string {
 
 // ─── Pass 2: @event[.modifiers] ──────────────────────────────────────────────
 
-export function compileEvents(html: string, cc: CompilerContext): string {
+export function compileEvents<C>(html: string, cc: CompilerContext<C>): string {
   return html.replace(
     /@([\w.]+)="(\w+)"/g,
     (_, directive: string, name: string) => {
@@ -126,6 +127,6 @@ export function compileEvents(html: string, cc: CompilerContext): string {
   );
 }
 
-export function compile(html: string, cc: CompilerContext): string {
+export function compile<C>(html: string, cc: CompilerContext<C>): string {
   return compileEvents(compileBind(html, cc), cc);
 }
