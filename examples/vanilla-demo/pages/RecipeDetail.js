@@ -37,7 +37,7 @@ export const RecipeDetail = component({
   // ctx.signal is aborted automatically on unmount (navigation away).
   afterRender(_, ctx) {
     if (!ctx.state.loading) return;  // already loaded
-    const id = (ctx.props as { id?: string }).id ?? '';
+    const id = ctx.props.id ?? '';
 
     // Real usage: apiFetch(`/api/recipe/${id}`, null, { method: 'GET', signal: ctx.signal })
     // Here we simulate with a short timeout that respects the abort signal.
