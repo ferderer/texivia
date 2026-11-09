@@ -1,6 +1,6 @@
 # Texivia
 
-**1.5 kB router. Zero dependencies. Any framework.**
+**1.4 kB router. Zero dependencies. Any framework.**
 
 From Latin *textor* (weaver) + *via* (road) — "path weaver."
 
@@ -20,7 +20,7 @@ npm install texivia-router
 |         | TanStack | Vue Router | navigo | wouter | **Texivia** |
 |---------|--------:|-----------:|-------:|-------:|------------:|
 | LOC     |  11,561 |  2,503 | 1,007 | 420 | **168** |
-| Gzipped | 31.6 kB | 3.5 kB | 2.9 kB | 2.5 kB | **1.5 kB** |
+| Gzipped | 31.6 kB | 3.5 kB | 2.9 kB | 2.5 kB | **1.4 kB** |
 | Files   |      58 |     32 | 8 | 20 | **1** |
 | Deps    |       7 | 17 | 0 | 3 | **0** |
 | Svelte  |       – | – | ✓ | – | **✓** |
