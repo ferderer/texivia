@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { Router } from '../src/texivia';
+import { Router } from '../src/index';
 
 // We need to access the private _match method for testing.
 // _match returns { event, redirect?, handler? } internally —

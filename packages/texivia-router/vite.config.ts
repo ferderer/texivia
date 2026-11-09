@@ -4,7 +4,7 @@ import { minify } from 'terser';
 export default defineConfig({
   build: {
     lib: {
-      entry: 'src/texivia.ts',
+      entry: 'src/index.ts',
       name: 'Texivia',
       fileName: (format) => format === 'es' ? 'texivia.mjs' : 'texivia.js',
       formats: ['es', 'cjs'],

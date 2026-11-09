@@ -27,7 +27,8 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/ferderer/texivia.git"
+    "url": "https://github.com/ferderer/texivia.git",
+    "directory": "packages/texivia-router"
   },
   "homepage": "https://ferderer.de/projects/texivia",
   "bugs": {

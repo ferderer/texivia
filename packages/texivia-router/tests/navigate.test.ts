@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { Router } from '../src/texivia';
+import { Router } from '../src/index';
 
 // Mock browser APIs
 const mockPushState = vi.fn();

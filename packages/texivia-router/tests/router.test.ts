@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { Router } from '../src/texivia';
+import { Router } from '../src/index';
 
 describe('Router constructor', () => {
   it('creates a router with empty routes', () => {
