@@ -29,7 +29,7 @@ npm install texivia-router
 | Angular |       – | – | ✓ | – | **✓** |
 | Vanilla |       – | – | ✓ | – | **✓** |
 
-Texivia compiles all routes into a single regex at startup. Matching is a single `exec()` call — O(1) regardless of route count.
+Texivia compiles all routes into a single regex at startup. Matching a URL is one `exec()` call, with no loop over the routes in JavaScript (see [ADR-0001](https://github.com/ferderer/texivia/blob/main/docs/adr/0001-one-combined-regex.md) for what that does and does not buy).
 
 ## Quick Start
 

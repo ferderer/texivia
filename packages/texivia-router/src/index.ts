@@ -50,7 +50,7 @@ const MAX_REDIRECTS = 10;
 
 /**
  * Lightweight, framework-agnostic router for single-page applications.
- * Compiles all routes into a single regex for O(1) matching.
+ * Compiles all routes into a single regex; one exec() per navigation.
  *
  * @template T The type of view to be used with the router.
  */
