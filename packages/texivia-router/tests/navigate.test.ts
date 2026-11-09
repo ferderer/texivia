@@ -306,6 +306,41 @@ describe('Router _navigate function', () => {
   // =========================================================================
   // Event detail completeness
   // =========================================================================
+  describe('Popstate reversion (ADR-0043)', () => {
+    it('restores the last successful URL, also when that route has no handler', async () => {
+      const router = new Router([
+        { path: '/a', view: 'A' },
+        { path: '/b', view: 'B' },
+        { path: '/guard', view: 'G', handler: () => false },
+      ]);
+
+      await navigate(router, new URL('http://localhost/a'), true);
+      await navigate(router, new URL('http://localhost/b'), true);
+      mockPushState.mockClear();
+
+      // back/forward lands on /guard, the handler aborts
+      const result = await navigate(router, new URL('http://localhost/guard'), false);
+
+      expect(result).toBeNull();
+      expect(mockPushState).toHaveBeenCalledTimes(1);
+      expect(mockPushState).toHaveBeenCalledWith({ path: 'http://localhost/b' }, '', 'http://localhost/b');
+    });
+
+    it('tracks the final URL of a redirect chain', async () => {
+      const router = new Router([
+        { path: '/old', redirect: '/new' },
+        { path: '/new', view: 'N' },
+        { path: '/guard', view: 'G', handler: () => false },
+      ]);
+
+      await navigate(router, new URL('http://localhost/old'), true);
+      mockPushState.mockClear();
+      await navigate(router, new URL('http://localhost/guard'), false);
+
+      expect(mockPushState).toHaveBeenCalledWith({ path: 'http://localhost/new' }, '', 'http://localhost/new');
+    });
+  });
+
   describe('Dispatched event detail', () => {
     it('event detail contains path, params, search, and hash', async () => {
       const router = new Router([

@@ -204,11 +204,11 @@ class Router<T = unknown> {
         }
         return null;
       }
-      this._currentUrl = url.href;
       if (typeof hookResult === 'string')
         return this._navigate(new URL(hookResult, window.location.origin), pushState, redirectCount + 1);
     }
 
+    this._currentUrl = url.href;
     if (pushState)
       window.history.pushState({ path: url.pathname }, '', url);
 
