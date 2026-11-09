@@ -43,10 +43,10 @@ export const RecipeDetail = component({
     // Here we simulate with a short timeout that respects the abort signal.
     const timer = setTimeout(() => {
       if (ctx.signal.aborted) return;
-      const recipe = (MOCK as Record<string, unknown>)[id] ?? null;
+      const recipe = MOCK[id] ?? null;
       ctx.batch(() => {
-        ctx.state.recipe  = recipe as never;
-        ctx.state.loading = false as never;
+        ctx.state.recipe  = recipe;
+        ctx.state.loading = false;
       });
     }, 300);
 
