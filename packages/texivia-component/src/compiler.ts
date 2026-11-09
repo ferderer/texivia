@@ -19,20 +19,20 @@
  *   itself (`${…}`) are not – escape untrusted data there.
  *
  * Pass 2 — @event[.modifier…]="handler"
- *   <button @click="save">           → data-eid
- *   <form   @submit.prevent="send">  → data-eid, calls e.preventDefault()
+ *   <button @click="save">           → data-eid-<n>
+ *   <form   @submit.prevent="send">  → data-eid-<n>, calls e.preventDefault()
  *   Modifiers: .prevent  .stop  .once
  *   The handler runs only for its own event type.
  *
- * Several directives on one element (e.g. @bind and @change) end up as one
- * data-eid attribute with space-separated keys.
+ * Every directive becomes its own attribute `data-eid-<n>`, so several
+ * directives on one element (e.g. @bind and @change) never collide.
  *
  * .once is implemented with a consumed flag per registration — correct
  * across re-renders because each render creates a fresh handler closure.
  */
 
-import { DELEGATED_EVENTS } from './events';
-import type { Scope } from './events';
+import { DELEGATED_EVENTS } from './events.js';
+import type { Scope } from './events.js';
 
 /** Escapes a value for an attribute value or element text. */
 function escape(value: unknown): string {
@@ -52,10 +52,16 @@ export interface CompilerContext<C = unknown> {
 
 // ─── Pass 1: @bind ────────────────────────────────────────────────────────────
 
+/** Characters inside a start tag; quoted attribute values may contain '>'. */
+const IN_TAG = `(?:[^>"']|"[^"]*"|'[^']*')`;
+const BIND_INPUT    = new RegExp(`(<input${IN_TAG}*?)@bind="(\\w+)"(${IN_TAG}*?>)`, 'gi');
+const BIND_TEXTAREA = new RegExp(`(<textarea${IN_TAG}*?)@bind="(\\w+)"(${IN_TAG}*?>)[\\s\\S]*?<\\/textarea>`, 'gi');
+const BIND_SELECT   = new RegExp(`(<select${IN_TAG}*?)@bind="(\\w+)"(${IN_TAG}*?>)([\\s\\S]*?)<\\/select>`, 'gi');
+
 export function compileBind<C>(html: string, cc: CompilerContext<C>): string {
   // <input @bind="key" …>
   html = html.replace(
-    /(<input[^>]*?)@bind="(\w+)"([^>]*?>)/gi,
+    BIND_INPUT,
     (_, before: string, key: string, after: string) => {
       const tag        = before + after;
       const isCheckbox = /type\s*=\s*["']checkbox["']/i.test(tag);
@@ -69,34 +75,34 @@ export function compileBind<C>(html: string, cc: CompilerContext<C>): string {
 
       if (isCheckbox) {
         const checked = value ? 'checked' : '';
-        return `${before}${checked} data-eid="${eid}"${after}`;
+        return `${before}${checked} ${eid}${after}`;
       }
 
       if (isRadio) {
         const radioVal = (tag.match(/value\s*=\s*["']([^"']*)["']/i) ?? [])[1] ?? '';
         const checked  = String(value) === radioVal ? 'checked' : '';
-        return `${before}${checked} data-eid="${eid}"${after}`;
+        return `${before}${checked} ${eid}${after}`;
       }
 
-      return `${before}value="${escape(value)}" data-eid="${eid}"${after}`;
+      return `${before}value="${escape(value)}" ${eid}${after}`;
     }
   );
 
   // <textarea @bind="key" …>…</textarea>
   html = html.replace(
-    /(<textarea[^>]*)@bind="(\w+)"([^>]*>)[\s\S]*?<\/textarea>/gi,
+    BIND_TEXTAREA,
     (_, open: string, key: string, rest: string) => {
       const value = cc.getState(key);
       const eid   = cc.scope.register('input', (e: Event) => {
         cc.setState(key, (e.target as HTMLTextAreaElement).value);
       });
-      return `${open}data-eid="${eid}"${rest}${escape(value)}</textarea>`;
+      return `${open}${eid}${rest}${escape(value)}</textarea>`;
     }
   );
 
   // <select @bind="key" …>…</select>
   html = html.replace(
-    /(<select[^>]*)@bind="(\w+)"([^>]*>)([\s\S]*?)<\/select>/gi,
+    BIND_SELECT,
     (_, open: string, key: string, rest: string, options: string) => {
       const value   = cc.getState(key) ?? '';
       const eid     = cc.scope.register('change', (e: Event) => {
@@ -107,7 +113,7 @@ export function compileBind<C>(html: string, cc: CompilerContext<C>): string {
         (optTag: string, _full: string, optVal: string) =>
           optVal === String(value) ? optTag.replace('>', ' selected>') : optTag
       );
-      return `${open}data-eid="${eid}"${rest}${patched}</select>`;
+      return `${open}${eid}${rest}${patched}</select>`;
     }
   );
 
@@ -140,27 +146,11 @@ export function compileEvents<C>(html: string, cc: CompilerContext<C>): string {
         else console.warn(`[texivia-component] unknown handler: "${name}"`);
       });
 
-      return `data-eid="${eid}"`;
+      return eid;
     }
   );
 }
 
-// ─── Pass 3: one data-eid per element ────────────────────────────────────────
-
-/** Joins several data-eid attributes of one start tag into one (the HTML parser keeps only the first). */
-export function mergeEids(html: string): string {
-  return html.replace(/<[a-z][^>]*>/gi, (tag) => {
-    const keys = [...tag.matchAll(/\sdata-eid="([^"]*)"/g)].map((m) => m[1]);
-    if (keys.length < 2) return tag;
-    let first = true;
-    return tag.replace(/\sdata-eid="[^"]*"/g, () => {
-      if (!first) return '';
-      first = false;
-      return ` data-eid="${keys.join(' ')}"`;
-    });
-  });
-}
-
 export function compile<C>(html: string, cc: CompilerContext<C>): string {
-  return mergeEids(compileEvents(compileBind(html, cc), cc));
+  return compileEvents(compileBind(html, cc), cc);
 }

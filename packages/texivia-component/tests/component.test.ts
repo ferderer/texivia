@@ -351,12 +351,72 @@ describe('several directives on one element', () => {
     });
     C().mount(app());
     const input = app().querySelector<HTMLInputElement>('#i')!;
-    expect(input.dataset.eid!.split(' ')).toHaveLength(2);
+    expect([...input.attributes].filter((x) => x.name.startsWith('data-eid-'))).toHaveLength(2);
     input.value = 'x';
     input.dispatchEvent(new Event('input', { bubbles: true }));
     expect(ctx!.state.text).toBe('x');
     app().querySelector('#i')!.dispatchEvent(new Event('change', { bubbles: true }));
     expect(save).toHaveBeenCalledTimes(1);
+  });
+
+  it('@bind and @change on one checkbox both run, bind first', () => {
+    const seen: boolean[] = [];
+    const C = component({
+      state:    { on: false },
+      template: () => `<input type="checkbox" @bind="on" @change="save" id="c">`,
+      save(ctx) { seen.push(ctx.state.on); },
+    });
+    C().mount(app());
+    const cb = app().querySelector<HTMLInputElement>('#c')!;
+    cb.checked = true;
+    cb.dispatchEvent(new Event('change', { bubbles: true }));
+    expect(seen).toEqual([true]);
+  });
+
+  it('@bind and @input on one text input both run', () => {
+    const seen: string[] = [];
+    const C = component({
+      state:    { text: '' },
+      template: () => `<input @bind="text" @input="typed" id="i">`,
+      typed(ctx) { seen.push(ctx.state.text); },
+    });
+    C().mount(app());
+    const input = app().querySelector<HTMLInputElement>('#i')!;
+    input.value = 'q';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    expect(seen).toEqual(['q']);
+  });
+
+  it('a quoted ">" in another attribute does not break directives', () => {
+    const click = vi.fn();
+    const key = vi.fn();
+    const C = component({
+      template: () => `<button title="a > b" @click="click" @keydown="key" id="b">x</button>`,
+      click, key,
+    });
+    C().mount(app());
+    const btn = app().querySelector('#b')!;
+    expect(btn.getAttribute('title')).toBe('a > b');
+    btn.dispatchEvent(new Event('click', { bubbles: true }));
+    btn.dispatchEvent(new Event('keydown', { bubbles: true }));
+    expect(click).toHaveBeenCalledTimes(1);
+    expect(key).toHaveBeenCalledTimes(1);
+  });
+
+  it('@bind works after a quoted ">" in the same tag', () => {
+    let ctx: { state: { text: string } } | undefined;
+    const C = component({
+      state:    { text: 'v' },
+      template: () => `<input placeholder="a > b" @bind="text" id="i">`,
+      afterRender(_, c) { ctx = c; },
+    });
+    C().mount(app());
+    const input = app().querySelector<HTMLInputElement>('#i')!;
+    expect(input.value).toBe('v');
+    expect(input.placeholder).toBe('a > b');
+    input.value = 'w';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    expect(ctx!.state.text).toBe('w');
   });
 
   it('@click and @keydown on one button', () => {

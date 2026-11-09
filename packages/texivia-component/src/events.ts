@@ -4,10 +4,12 @@
  * One capture-phase listener per event type on document. Capture runs before
  * the event reaches the target, so `.stop` (stopPropagation) keeps it from all
  * later listeners, and non-bubbling events (focus, blur) are delegated too.
- * Each element carries a `data-eid` attribute with one or more space-separated
- * keys; every key points to a handler for one event type. The listener for an
- * event runs the handler of the nearest element (target or ancestor) that has
- * one for that event type – a click inside a `@submit` form is not a submit.
+ * Every directive becomes its own attribute `data-eid-<n>` (unique name, so
+ * several directives on one element never collide); each points to a handler
+ * for one event type. The listener for an event finds the nearest element
+ * (target or ancestor) with handlers for that event type and runs all of them
+ * in template order – a click inside a `@submit` form is not a submit, and
+ * `@bind` plus `@change` on one checkbox both run.
  *
  * Components receive a Scope via createScope() — a scoped register/cleanup
  * pair. On unmount or re-render the scope is cleaned up, removing all
@@ -16,6 +18,7 @@
 
 type Handler = (e: Event) => void;
 
+const PREFIX = 'data-eid-';
 const _handlers = new Map<string, { type: string; fn: Handler }>();
 let _id = 0;
 let _installed = false;  // guard against double-installation (e.g. HMR)
@@ -36,13 +39,17 @@ export function setupEvents(root: Document | HTMLElement = document): void {
 
   for (const type of DELEGATED_EVENTS) {
     const fn = (e: Event) => {
-      let el = (e.target as HTMLElement | null)?.closest?.('[data-eid]') as HTMLElement | null;
-      while (el) {
-        for (const key of el.dataset.eid!.split(' ')) {
-          const handler = _handlers.get(key);
-          if (handler?.type === e.type) { handler.fn(e); return; }
+      for (let el = e.target as Element | null; el?.attributes; el = el.parentElement) {
+        const matching: Handler[] = [];
+        for (const { name } of el.attributes) {
+          if (!name.startsWith(PREFIX)) continue;
+          const handler = _handlers.get(name);
+          if (handler?.type === e.type) matching.push(handler.fn);
         }
-        el = el.parentElement?.closest('[data-eid]') as HTMLElement | null;
+        if (matching.length) {
+          for (const h of matching) h(e);
+          return;
+        }
       }
     };
     root.addEventListener(type, fn, { capture: true });
@@ -60,7 +67,7 @@ export function _resetEvents(): void {
 }
 
 export interface Scope {
-  /** Register a handler for one event type; returns the data-eid key to embed in HTML. */
+  /** Register a handler for one event type; returns the attribute name to embed in HTML. */
   register(type: string, fn: Handler): string;
   /** Remove all handlers registered through this scope. */
   cleanup(): void;
@@ -75,7 +82,7 @@ export function createScope(): Scope {
 
   return {
     register(type: string, fn: Handler): string {
-      const key = 'e' + (_id++);
+      const key = PREFIX + (_id++);
       _handlers.set(key, { type, fn });
       keys.add(key);
       return key;
