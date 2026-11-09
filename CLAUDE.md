@@ -6,7 +6,7 @@ Ecosystem of small, atomic TypeScript packages for single-page apps. The core is
 
 npm workspaces monorepo (root package `texivia-ecosystem`, private):
 
-- `packages/texivia-router` – router (published, 1.0.x). Builds `dist/texivia.{js,mjs}`; keep these names, they are part of the released package.
+- `packages/texivia-router` – router (published, 1.0.x). Builds `dist/texivia.{mjs,cjs}`; keep the base name `texivia`, it is part of the released package. CommonJS output must end in `.cjs` (all packages are `"type": "module"`).
 - `packages/texivia-reactive` – Proxy-based reactive state with `batch()`
 - `packages/texivia-component` – component factory (template literals, `@event`, `@bind`, event delegation) → depends on reactive
 - `packages/texivia-store` – global reactive store → depends on reactive
@@ -61,8 +61,10 @@ Changesets + npm trusted publishing (`.github/workflows/release.yml`). Merging t
 
 - Packages are unscoped and prefixed `texivia-`; one responsibility each; keep the dependency tree flat (component→reactive, store→reactive; planned: session→store, oidc→store+fetch). Never bundle another package: `libConfig()` marks dependencies as external.
 - Members starting with `_` are renamed by Terser in `dist/` (property mangling); tests that use private members must run against `src/`.
-- texivia-component delegates events on `document` in the capture phase (`.stop` stops all later listeners; focus/blur work).
-- Fetch: `apiFetch<T>` returns `{ payload, error }`; `ApiError` is the tuple `[timestamp, status, code, data, fields?]`; an aborted request is `E_ABORTED` with status 0, distinct from `E_NETWORK_ERROR` (detected by `err.name === 'AbortError'`, no `instanceof` – DOMException may come from another realm); JSON, `credentials: 'include'`.
+- texivia-component delegates events on `document` in the capture phase (`.stop` stops all later listeners; focus/blur work). Every handler is registered for one event type; a listener runs the handler of the nearest element with a handler for that type. Several directives on one element share one `data-eid` with space-separated keys. `@bind` writes back on `input` (text, textarea) or `change` (checkbox, radio, select) and HTML-escapes the injected value; values the template interpolates itself are not escaped.
+- A re-render replaces the whole container (`innerHTML`), so a focused `@bind` input loses focus after every keystroke – open design question, see the merge report.
+- `batch()` (texivia-reactive) collects the notify function of every reactive object changed inside it and calls each once; the second parameter is ignored.
+- Fetch: `apiFetch<T>` returns `{ payload, error }`; `ApiError` is the tuple `[timestamp, status, code, data, fields?]`; the body is read as text: empty → `payload: null` (204), 2xx non-JSON → `E_INVALID_JSON`, non-2xx → the server's ApiError tuple if the body is one, else `E_HTTP_ERROR`, always with the HTTP status; an aborted request is `E_ABORTED` with status 0, distinct from `E_NETWORK_ERROR` (detected by `err.name === 'AbortError'`, no `instanceof` – DOMException may come from another realm); JSON, `credentials: 'include'`.
 - Svelte examples: plain Svelte 5 without SvelteKit, runes only (`$props`, `$state`, `$derived` with a direct expression, `$effect`); rune stores in `.svelte.ts`; one component per file; navigate with native `<a>` links or `router.navigate()`, never `window.location.href`.
 - Tests: Vitest with jsdom, one test file per router function; same-origin URLs for `pushState`; never spread `window.location` in mocks.
 - Feature filter: add only what cannot easily be done with CSS/HTML/vanilla, is not rarely needed, and has no good small library.

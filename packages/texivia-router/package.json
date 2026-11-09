@@ -4,7 +4,7 @@
   "description": "1.5 kB framework-agnostic TypeScript router with compiled regex matching",
   "author": "Vadim Ferderer (https://ferderer.de/)",
   "license": "Apache-2.0",
-  "main": "dist/texivia.js",
+  "main": "dist/texivia.cjs",
   "module": "dist/texivia.mjs",
   "types": "dist/index.d.ts",
   "type": "module",
@@ -15,7 +15,7 @@
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/texivia.mjs",
-      "require": "./dist/texivia.js"
+      "require": "./dist/texivia.cjs"
     }
   },
   "scripts": {

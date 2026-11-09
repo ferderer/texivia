@@ -1,8 +1,8 @@
 // Shared vite library build config for all packages in packages/*.
 // Usage in packages/<name>/vite.config.ts:
 //   import { libConfig } from '../../vite.lib';
-//   export default libConfig();                       // dist/index.{mjs,js}
-//   export default libConfig({ fileBase: 'texivia' }); // dist/texivia.{mjs,js}
+//   export default libConfig();                       // dist/index.{mjs,cjs}
+//   export default libConfig({ fileBase: 'texivia' }); // dist/texivia.{mjs,cjs}
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { defineConfig } from 'vite';
@@ -29,7 +29,7 @@ export function libConfig({ entry = 'src/index.ts', name, fileBase = 'index' }: 
       lib: {
         entry,
         name,
-        fileName: (format) => format === 'es' ? `${fileBase}.mjs` : `${fileBase}.js`,
+        fileName: (format) => format === 'es' ? `${fileBase}.mjs` : `${fileBase}.cjs`,
         formats: ['es', 'cjs'],
       },
       sourcemap: true,
