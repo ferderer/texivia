@@ -423,9 +423,9 @@ describe('Router _match function', () => {
       expect(match?.params).toEqual({ year: '2025', slug: 'tech-summit' });
 
       expect(testMatch(router, '/25/events/tech-summit')).toBeNull();
-      // TechSummit matches the case-insensitive mapping regex but fails the
-      // case-sensitive param regex [a-z-]+, so the router throws internally.
-      expect(() => testMatch(router, '/2025/events/TechSummit')).toThrow();
+      // Matching is case-insensitive, parameter constraints included:
+      // [a-z-]+ also accepts upper-case letters.
+      expect(testMatch(router, '/2025/events/TechSummit')?.params).toEqual({ year: '2025', slug: 'TechSummit' });
     });
   });
 
@@ -472,5 +472,24 @@ describe('Router _match function', () => {
         expect(match?.view).toBe('NotFoundView');
       }
     });
+  });
+});
+
+describe('Case-insensitive matching', () => {
+  it('matches static routes regardless of case', () => {
+    const router = new Router([{ path: '/about', view: 'AboutView' }]);
+    expect(testMatch(router, '/ABOUT')?.view).toBe('AboutView');
+  });
+
+  it('matches parameterized routes regardless of case instead of throwing', () => {
+    const router = new Router([{ path: '/users/{id}', view: 'UserView' }]);
+    const match = testMatch(router, '/USERS/5');
+    expect(match?.view).toBe('UserView');
+    expect(match?.params).toEqual({ id: '5' });
+  });
+
+  it('keeps the case of parameter values', () => {
+    const router = new Router([{ path: '/files/{name}', view: 'FileView' }]);
+    expect(testMatch(router, '/Files/ReadMe.MD')?.params).toEqual({ name: 'ReadMe.MD' });
   });
 });

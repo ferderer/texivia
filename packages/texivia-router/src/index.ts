@@ -104,7 +104,7 @@ class Router<T = unknown> {
         paramRegexString += '$';
         mappingRegex += '$)';
         mappings.push(mappingRegex);
-        const paramRegex = paramNames.length ? new RegExp(paramRegexString) : null;
+        const paramRegex = paramNames.length ? new RegExp(paramRegexString, 'i') : null;
         this._routes.push({ ...c, paramRegex });
       }
     }
