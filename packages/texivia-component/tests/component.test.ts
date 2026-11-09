@@ -371,3 +371,58 @@ describe('several directives on one element', () => {
     expect(key).toHaveBeenCalledTimes(1);
   });
 });
+
+describe('@bind write-back', () => {
+  it('keeps the focused input: no re-render while typing', () => {
+    let renders = 0;
+    let ctx: { state: { text: string } } | undefined;
+    const C = component({
+      state:    { text: '' },
+      template: () => { renders++; return `<input @bind="text" id="i">`; },
+      afterRender(_, c) { ctx = c; },
+    });
+    C().mount(app());
+    renders = 0;
+    const input = app().querySelector<HTMLInputElement>('#i')!;
+    input.focus();
+    input.value = 'ab';
+    input.setSelectionRange(1, 1);
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    expect(ctx!.state.text).toBe('ab');
+    expect(renders).toBe(0);
+    expect(input.isConnected).toBe(true);
+    expect(document.activeElement).toBe(input);
+    expect(input.selectionStart).toBe(1);
+  });
+
+  it('the next render shows the bound value', () => {
+    const C = component({
+      state:    { text: '', n: 0 },
+      template: ({ text, n }) => `<input @bind="text" id="i"><p>${text}${n}</p><button @click="inc" id="b">+</button>`,
+      inc(ctx) { ctx.state.n++; },
+    });
+    C().mount(app());
+    const input = app().querySelector<HTMLInputElement>('#i')!;
+    input.value = 'x';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    expect(app().querySelector('p')?.textContent).toBe('0');
+    app().querySelector('#b')!.dispatchEvent(new Event('click', { bubbles: true }));
+    expect(app().querySelector('p')?.textContent).toBe('x1');
+    expect(app().querySelector<HTMLInputElement>('#i')?.value).toBe('x');
+  });
+
+  it('a method that changes other state still re-renders', () => {
+    const C = component({
+      state:    { text: '', saved: '' },
+      template: ({ saved }) => `<input @bind="text" @change="save" id="i"><p>${saved}</p>`,
+      save(ctx) { ctx.state.saved = ctx.state.text; },
+    });
+    C().mount(app());
+    const input = app().querySelector<HTMLInputElement>('#i')!;
+    input.value = 'y';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+    expect(app().querySelector('p')?.textContent).toBe('y');
+  });
+});
+

@@ -12,6 +12,9 @@
  *   <textarea              @bind="bio">             → inner text replaced, written back on input
  *   <select                @bind="country">         → matching <option> selected, written back on change
  *
+ *   The write-back does not re-render the component (focus and cursor stay);
+ *   other parts of the template show the new value after the next render.
+ *
  *   Injected values are HTML-escaped. Values interpolated by the template
  *   itself (`${…}`) are not – escape untrusted data there.
  *

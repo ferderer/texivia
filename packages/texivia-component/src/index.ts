@@ -81,7 +81,10 @@ export function component<
     let scope:     Scope | null = null;
     let controller = new AbortController();
 
-    function notify() { render(); }
+    // @bind write-backs set state without re-rendering: the element already
+    // shows the value, and replacing it would drop focus and cursor.
+    let silent = false;
+    function notify() { if (!silent) render(); }
 
     const state = reactive<S>((def.state ?? {}) as S, notify);
 
@@ -97,7 +100,9 @@ export function component<
     }
 
     function setState(key: string, value: unknown): void {
-      (state as Record<string, unknown>)[key] = value;
+      silent = true;
+      try { (state as Record<string, unknown>)[key] = value; }
+      finally { silent = false; }
     }
 
     function getMethod(name: string): MethodFn<S, P> | undefined {
