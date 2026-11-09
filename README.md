@@ -110,6 +110,10 @@ export const Home = component({
 | `@click.once="method"` | Fires once, then becomes a no-op |
 | `@bind="key"` | Two-way binding for inputs, textarea, select |
 
+- A handler runs only for its own event type. The nearest element (target or ancestor) with handlers for that type runs all of them, in template order — e.g. `<input type="checkbox" @bind="on" @change="save">` first updates `on`, then calls `save`.
+- Every state change re-renders the whole component (`innerHTML`). **Exception: `@bind` writes the value into state without re-rendering**, so the focused field keeps focus and cursor. Other parts of the template show the bound value only after the next render (any other state change). Do not build live previews of bound fields; render them from a method instead (e.g. on `@change`).
+- `@bind` HTML-escapes the value it injects. Values you interpolate in the template yourself (`${…}`) are inserted as HTML — escape untrusted data there.
+
 ### `apiFetch`
 
 ```ts
@@ -126,6 +130,20 @@ if (error) {
 
 use(payload);
 ```
+
+| Response | Result |
+|---|---|
+| 2xx with JSON body | `{ payload, error: null }` |
+| 2xx with empty body (e.g. 204) | `{ payload: null, error: null }` |
+| 2xx with a body that is not JSON | error `E_INVALID_JSON` |
+| non-2xx with an `ApiError` tuple as body | that tuple |
+| any other non-2xx | error `E_HTTP_ERROR` |
+| aborted via `signal` | error `E_ABORTED`, status `0` |
+| network failure | error `E_NETWORK_ERROR`, status `500` |
+
+The HTTP status is kept in `error[1]` for all HTTP responses.
+
+All packages ship ES modules (`import`) and CommonJS (`require`), each with matching type declarations.
 
 ## Examples
 
