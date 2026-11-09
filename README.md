@@ -155,7 +155,7 @@ The Svelte and Vue examples are standalone projects: build the router first (`np
 
 ## Architecture decisions
 
-Architecture decision records will be published here at a later point.
+See [docs/adr](./docs/adr/README.md): why the router and the packages are built the way they are.
 
 ## Monorepo
 
