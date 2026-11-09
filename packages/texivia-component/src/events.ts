@@ -1,7 +1,9 @@
 /**
  * Global event delegation.
  *
- * One listener per event type on document.
+ * One capture-phase listener per event type on document. Capture runs before
+ * the event reaches the target, so `.stop` (stopPropagation) keeps it from all
+ * later listeners, and non-bubbling events (focus, blur) are delegated too.
  * Each element carries a `data-eid` attribute pointing to a handler
  * in the registry.
  *
@@ -15,6 +17,7 @@ type Handler = (e: Event) => void;
 const _handlers = new Map<string, Handler>();
 let _id = 0;
 let _installed = false;  // guard against double-installation (e.g. HMR)
+let _listeners: Array<{ root: Document | HTMLElement; type: string; fn: (e: Event) => void }> = [];
 
 const DELEGATED_EVENTS = [
   'click', 'input', 'change', 'submit',
@@ -30,17 +33,22 @@ export function setupEvents(root: Document | HTMLElement = document): void {
   _installed = true;
 
   for (const type of DELEGATED_EVENTS) {
-    root.addEventListener(type, (e: Event) => {
-      const el = (e.target as HTMLElement).closest('[data-eid]') as HTMLElement | null;
+    const fn = (e: Event) => {
+      const target = e.target as HTMLElement | null;
+      const el = target?.closest?.('[data-eid]') as HTMLElement | null;
       if (!el) return;
-      const fn = _handlers.get(el.dataset.eid!);
-      if (fn) fn(e);
-    }, { capture: false });
+      const handler = _handlers.get(el.dataset.eid!);
+      if (handler) handler(e);
+    };
+    root.addEventListener(type, fn, { capture: true });
+    _listeners.push({ root, type, fn });
   }
 }
 
-/** Reset installation state — used in tests only. */
+/** Remove the delegation listeners and all handlers — used in tests only. */
 export function _resetEvents(): void {
+  for (const { root, type, fn } of _listeners) root.removeEventListener(type, fn, { capture: true });
+  _listeners = [];
   _installed = false;
   _handlers.clear();
   _id = 0;

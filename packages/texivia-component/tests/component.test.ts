@@ -184,6 +184,53 @@ describe('event modifiers', () => {
   });
 });
 
+describe('event delegation', () => {
+  it('.stop also keeps the event from listeners on ancestor elements', () => {
+    const outer = vi.fn();
+    app().addEventListener('click', outer);
+    const C = component({
+      template: () => `<button @click.stop="noop" id="b">x</button>`,
+      noop() {},
+    });
+    C().mount(app());
+    app().querySelector('#b')!.dispatchEvent(new Event('click', { bubbles: true }));
+    expect(outer).not.toHaveBeenCalled();
+  });
+
+  it('without .stop, ancestor listeners still see the event', () => {
+    const outer = vi.fn();
+    app().addEventListener('click', outer);
+    const C = component({
+      template: () => `<button @click="noop" id="b">x</button>`,
+      noop() {},
+    });
+    C().mount(app());
+    app().querySelector('#b')!.dispatchEvent(new Event('click', { bubbles: true }));
+    expect(outer).toHaveBeenCalledTimes(1);
+  });
+
+  it('delegates non-bubbling events (focus)', () => {
+    const focused = vi.fn();
+    const C = component({
+      template: () => `<input @focus="focused" id="i">`,
+      focused,
+    });
+    C().mount(app());
+    app().querySelector('#i')!.dispatchEvent(new Event('focus', { bubbles: false }));
+    expect(focused).toHaveBeenCalledTimes(1);
+  });
+
+  it('_resetEvents removes the delegation listeners', () => {
+    const click = vi.fn();
+    _resetEvents();
+    setupEvents();
+    const C = component({ template: () => `<button @click="click" id="b">x</button>`, click });
+    C().mount(app());
+    app().querySelector('#b')!.dispatchEvent(new Event('click', { bubbles: true }));
+    expect(click).toHaveBeenCalledTimes(1);
+  });
+});
+
 describe('batch()', () => {
   it('triggers only one re-render for multiple state writes', () => {
     let renders = 0;
