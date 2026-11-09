@@ -1,0 +1,36 @@
+{
+  "name": "texivia-store",
+  "version": "1.0.0",
+  "description": "Global reactive store — part of the Texivia ecosystem",
+  "author": "Vadim Ferderer (https://ferderer.de/)",
+  "license": "Apache-2.0",
+  "type": "module",
+  "main":   "dist/index.js",
+  "module": "dist/index.mjs",
+  "types":  "dist/index.d.ts",
+  "files":  ["dist"],
+  "exports": {
+    ".": {
+      "types":   "./dist/index.d.ts",
+      "import":  "./dist/index.mjs",
+      "require": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build":     "vite build",
+    "test":      "vitest",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": ["store", "state", "reactive", "spa", "texivia"],
+  "repository": { "type": "git", "url": "https://github.com/ferderer/texivia.git" },
+  "dependencies": {
+    "texivia-reactive": "workspace:*"
+  },
+  "devDependencies": {
+    "terser":     "^5.39.0",
+    "typescript": "^5.6.3",
+    "vite":       "^5.4.8",
+    "vitest":     "^3.1.2"
+  },
+  "publishConfig": { "access": "public" }
+}
