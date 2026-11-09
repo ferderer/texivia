@@ -64,7 +64,7 @@ class Router<T = unknown> {
   /**
    * Creates a new router instance with the provided route configuration.
    * @param config Array of route configurations.
-   * @throws {Error} If a route path is malformed.
+   * @throws {Error} If a route path is malformed, contains a double slash or repeats a parameter name.
    */
   constructor(config: Array<ConfigRoute<T>> = []) {
     const mappings: string[] = [];
@@ -75,6 +75,8 @@ class Router<T = unknown> {
         wildcard = c;
       }
       else {
+        if (c.path.includes('//'))
+          throw new Error(`Malformed path (double slash): ${c.path}`);
         const matches = c.path.match(this.segmentRegex);
         if (!matches || matches.join('') !== c.path)
           throw new Error(`Malformed path: ${c.path}`);
@@ -100,6 +102,10 @@ class Router<T = unknown> {
           }
           return '';
         });
+
+        const duplicate = paramNames.find((name, i) => paramNames.indexOf(name) !== i);
+        if (duplicate)
+          throw new Error(`Duplicate parameter name '${duplicate}' in path: ${c.path}`);
 
         paramRegexString += '$';
         mappingRegex += '$)';

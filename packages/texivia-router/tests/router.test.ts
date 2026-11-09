@@ -51,6 +51,16 @@ describe('Router constructor', () => {
     }).toThrow();
   });
 
+  it('throws on a double slash in a path (ADR-0042)', () => {
+    expect(() => new Router([{ path: '/a//b' }])).toThrow('Malformed path (double slash): /a//b');
+    expect(() => new Router([{ path: '//' }])).toThrow('Malformed path (double slash)');
+  });
+
+  it('throws on duplicate parameter names (ADR-0042)', () => {
+    expect(() => new Router([{ path: '/u/{id}/x/{id}' }])).toThrow("Duplicate parameter name 'id' in path: /u/{id}/x/{id}");
+    expect(() => new Router([{ path: '/u/{id}/x/{other}' }])).not.toThrow();
+  });
+
   it('handles complex path patterns', () => {
     const router = new Router([
       { path: '/blog/{year:\\d{4}}/{month:\\d{2}}/{day:\\d{2}}/{slug:[a-z0-9-]+}', view: 'BlogPostView' },
