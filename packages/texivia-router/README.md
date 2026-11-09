@@ -1,6 +1,6 @@
 # Texivia
 
-**1.4 kB router. Zero dependencies. Any framework.**
+**1.5 kB router. Zero dependencies. Any framework.**
 
 From Latin *textor* (weaver) + *via* (road) — "path weaver."
 
@@ -19,8 +19,8 @@ npm install texivia-router
 
 |         | TanStack | Vue Router | navigo | wouter | **Texivia** |
 |---------|--------:|-----------:|-------:|-------:|------------:|
-| LOC     |  11,561 |  2,503 | 1,007 | 420 | **160** |
-| Gzipped | 31.6 kB | 3.5 kB | 2.9 kB | 2.5 kB | **1.4 kB** |
+| LOC     |  11,561 |  2,503 | 1,007 | 420 | **168** |
+| Gzipped | 31.6 kB | 3.5 kB | 2.9 kB | 2.5 kB | **1.5 kB** |
 | Files   |      58 |     32 | 8 | 20 | **1** |
 | Deps    |       7 | 17 | 0 | 3 | **0** |
 | Svelte  |       – | – | ✓ | – | **✓** |
@@ -190,9 +190,13 @@ Same pattern — shared `router.ts`, import where you need `router.navigate()`.
 
 **Type-safe** — Generic `Router<T>` lets you type your view data. Route configs, matched routes, and handler signatures are fully typed.
 
-**Dynamic parameters with constraints** — `{id}` matches any segment. `{id:\\d+}` matches only digits. `{slug:[a-z-]+}` matches only lowercase slugs. Full regex power per segment.
+**Dynamic parameters with constraints** — `{id}` matches any segment. `{id:\\d+}` matches only digits. `{slug:[a-z0-9-]+}` matches slugs. Full regex power per segment.
 
-**Async navigation handlers** — Per-route `handler` functions run before navigation. Return `true` to proceed, `false` to cancel, or a string to redirect. Supports async/await for auth checks, data loading, or analytics.
+**Case-insensitive matching** — `/About` and `/USERS/5` match `/about` and `/users/{id}`; parameter values keep their case. Constraints are case-insensitive too: `{slug:[a-z-]+}` also accepts `Tech-Summit`.
+
+**Validated config** — The constructor throws on malformed paths (`Malformed path: …`), double slashes (`Malformed path (double slash): …`) and repeated parameter names (`Duplicate parameter name 'id' in path: …`).
+
+**Async navigation handlers** — Per-route `handler` functions run before navigation. Return `true` (or nothing) to proceed, `false` to cancel, a string to redirect, or a view to render instead of the route's own `view` while the URL stays the same. Supports async/await for auth checks, data loading, or analytics.
 
 ```typescript
 const router = new Router([
@@ -204,9 +208,16 @@ const router = new Router([
       await preloadData(match.params);
       return true;
     }
+  },
+  {
+    // '/' stays in the address bar; the handler picks the view
+    path: '/',
+    handler: async () => (await isAdmin()) ? AdminDashboard : MemberDashboard,
   }
 ]);
 ```
+
+A string is always a redirect, also when your views are strings.
 
 **Automatic link interception** — Clicks on relative `<a>` tags are captured and routed. External links, `target="_blank"`, `download`, and `no-router` attributes are ignored. No special link components needed.
 
@@ -219,7 +230,7 @@ const router = new Router([
 
 **Declarative redirects** — `{ path: '/old', redirect: '/new' }` in the config. No imperative redirect logic needed.
 
-**Catch-all 404** — `{ path: '*' }` matches anything not matched by other routes. Place it last in your config.
+**Catch-all 404** — `{ path: '*' }` matches anything not matched by other routes. It is always checked last, wherever it appears in the config.
 
 **Event-driven** — Every navigation dispatches a `texivia` CustomEvent on `document` with full route detail: `view`, `params`, `search`, `hash`.
 
@@ -234,6 +245,77 @@ router.navigate('/search?q=pasta#results');
 
 **Nesting through composition** — No nested route config. Use your framework's own layout/slot/snippet system. The router stays flat, your component tree stays flexible.
 
+## Patterns
+
+Texivia has no lazy-loading, auth or i18n features. Each is a few lines in a handler.
+
+### Lazy loading with loading state, retry and error route
+
+```typescript
+import { loading } from './stores'; // any reactive flag your app renders
+
+function lazy<T>(load: () => Promise<{ default: T }>, retries = 2) {
+  return async (): Promise<T | string> => {
+    loading.value = true;
+    try {
+      for (let attempt = 0; ; attempt++) {
+        try { return (await load()).default; }
+        catch { if (attempt >= retries) return '/error'; }
+      }
+    } finally {
+      loading.value = false;
+    }
+  };
+}
+
+const router = new Router<Component>([
+  { path: '/admin', handler: lazy(() => import('./pages/Admin.svelte')) },
+  { path: '/error', view: LoadError },
+]);
+```
+
+The handler returns the loaded component, so the router renders it without an extra route; after the last failed attempt it redirects to `/error`.
+
+### Locale prefix
+
+```typescript
+const router = new Router<Component>([
+  { path: '/', handler: () => `/${navigator.language.startsWith('de') ? 'de' : 'en'}/` },
+  { path: '/{locale:en|de}/', view: Home },
+  { path: '/{locale:en|de}/recipes/{id:\\d+}', view: Recipe },
+  { path: '*', view: NotFound },
+]);
+
+document.addEventListener('texivia', (e) => setLocale(e.detail.params.locale));
+```
+
+### OAuth2 / OpenID Connect (authorization code flow)
+
+The router only routes; the OIDC client (here [oidc-client-ts](https://github.com/authts/oidc-client-ts)) does the protocol.
+
+```typescript
+import { UserManager } from 'oidc-client-ts';
+
+const auth = new UserManager({
+  authority: 'https://id.example.com',
+  client_id: 'my-spa',
+  redirect_uri: `${location.origin}/callback`,
+});
+
+const signedIn = async () => !!(await auth.getUser());
+
+const router = new Router<Component>([
+  // guard: send anonymous users to the identity provider, remember where they wanted to go
+  { path: '/account', view: Account,
+    handler: async (m) => (await signedIn()) || `/login?returnTo=${encodeURIComponent(m.path)}` },
+  { path: '/login',
+    handler: async (m) => { await auth.signinRedirect({ state: m.search.returnTo ?? '/' }); return false; } },
+  // the identity provider redirects back here with ?code=…&state=…
+  { path: '/callback',
+    handler: async () => { const user = await auth.signinRedirectCallback(); return (user.state as string) ?? '/'; } },
+]);
+```
+
 ## API
 
 ### `new Router<T>(config)`
@@ -245,18 +327,20 @@ type ConfigRoute<T> = {
   path: string;
   view?: T;
   redirect?: string;
-  handler?: (match: MatchedRoute<T>) => string | boolean | Promise<string | boolean>;
+  handler?: (match: MatchedRoute<T>) => boolean | string | T | void | Promise<boolean | string | T | void>;
 };
 ```
 
 - `path` — URL pattern. Literal segments, `{param}` or `{param:regex}` for dynamic segments, `*` for catch-all.
 - `view` — The view or component to render for this route.
 - `redirect` — Target path for redirects.
-- `handler` — Async or sync function called before navigation. Return `true` to proceed, `false` to cancel, or a string to redirect.
+- `handler` — Async or sync function called before navigation. Return `true` (or nothing) to proceed, `false` to cancel, a string to redirect, or a view `T` to render it instead of `view` (the URL stays the requested one).
+
+Throws on malformed paths, double slashes and duplicate parameter names.
 
 ### `router.start(): Promise<void>`
 
-Starts the router. Attaches `popstate`, `click`, and `texivia.goto` listeners. Navigates to the current URL.
+Starts the router. Attaches the `popstate` and `click` listeners and navigates to the current URL (without adding a history entry).
 
 ### `router.stop(): void`
 
@@ -264,7 +348,7 @@ Removes all event listeners. Call on cleanup.
 
 ### `router.navigate(path): Promise<MatchedRoute<T> | null>`
 
-Navigates to the given path. Runs handlers, pushes history state, and dispatches the `texivia` event. Returns the matched route or `null` if no route matches.
+Navigates to the given path. Runs handlers, pushes history state, and dispatches the `texivia` event. Returns the matched route, or `null` if no route matches or a handler cancelled the navigation. When a handler cancels a back/forward navigation, the URL is restored to the last successful one.
 
 ```typescript
 await router.navigate('/recipe/42');

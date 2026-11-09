@@ -252,11 +252,19 @@ onUnmounted(() =&gt; {
       </div>
 
       <div class="feature">
-        <p><strong>Dynamic parameters with constraints</strong> — <code>{id}</code> matches any segment. <code>{id:\d+}</code> matches only digits. <code>{slug:[a-z-]+}</code> matches only lowercase slugs. Full regex power per segment.</p>
+        <p><strong>Dynamic parameters with constraints</strong> — <code>{id}</code> matches any segment. <code>{id:\d+}</code> matches only digits. <code>{slug:[a-z0-9-]+}</code> matches slugs. Full regex power per segment.</p>
       </div>
 
       <div class="feature">
-        <p><strong>Async navigation handlers</strong> — Per-route <code>handler</code> functions run before navigation. Return <code>true</code> to proceed, <code>false</code> to cancel, or a string to redirect.</p>
+        <p><strong>Case-insensitive matching</strong> — <code>/About</code> and <code>/USERS/5</code> match <code>/about</code> and <code>/users/{id}</code>; parameter values keep their case. Constraints are case-insensitive too: <code>{slug:[a-z-]+}</code> also accepts <code>Tech-Summit</code>.</p>
+      </div>
+
+      <div class="feature">
+        <p><strong>Validated config</strong> — The constructor throws on malformed paths, double slashes and repeated parameter names.</p>
+      </div>
+
+      <div class="feature">
+        <p><strong>Async navigation handlers</strong> — Per-route <code>handler</code> functions run before navigation. Return <code>true</code> (or nothing) to proceed, <code>false</code> to cancel, a string to redirect, or a view to render instead of the route's own <code>view</code> while the URL stays the same.</p>
         <pre><code class="language-typescript">const router = new Router([
   {
     path: '/dashboard',
@@ -266,8 +274,14 @@ onUnmounted(() =&gt; {
       await preloadData(match.params);
       return true;
     }
+  },
+  {
+    // '/' stays in the address bar; the handler picks the view
+    path: '/',
+    handler: async () =&gt; (await isAdmin()) ? AdminDashboard : MemberDashboard,
   }
 ]);</code></pre>
+        <p>A string is always a redirect, also when your views are strings.</p>
       </div>
 
       <div class="feature">
@@ -283,7 +297,7 @@ onUnmounted(() =&gt; {
       </div>
 
       <div class="feature">
-        <p><strong>Catch-all 404</strong> — <code>{ path: '*' }</code> matches anything not matched by other routes. Place it last in your config.</p>
+        <p><strong>Catch-all 404</strong> — <code>{ path: '*' }</code> matches anything not matched by other routes. It is always checked last, wherever it appears in the config.</p>
       </div>
 
       <div class="feature">
@@ -305,6 +319,65 @@ router.navigate('/search?q=pasta#results');</code></pre>
       </div>
     </section>
 
+    <!-- Patterns -->
+    <section>
+      <h2>Patterns</h2>
+      <p>Texivia has no lazy-loading, auth or i18n features. Each is a few lines in a handler.</p>
+      <h3>Lazy loading with loading state, retry and error route</h3>
+      <pre><code class="language-typescript">import { loading } from './stores'; // any reactive flag your app renders
+
+function lazy&lt;T&gt;(load: () =&gt; Promise&lt;{ default: T }&gt;, retries = 2) {
+  return async (): Promise&lt;T | string&gt; =&gt; {
+    loading.value = true;
+    try {
+      for (let attempt = 0; ; attempt++) {
+        try { return (await load()).default; }
+        catch { if (attempt &gt;= retries) return '/error'; }
+      }
+    } finally {
+      loading.value = false;
+    }
+  };
+}
+
+const router = new Router&lt;Component&gt;([
+  { path: '/admin', handler: lazy(() =&gt; import('./pages/Admin.svelte')) },
+  { path: '/error', view: LoadError },
+]);</code></pre>
+      <p>The handler returns the loaded component, so the router renders it without an extra route; after the last failed attempt it redirects to <code>/error</code>.</p>
+      <h3>Locale prefix</h3>
+      <pre><code class="language-typescript">const router = new Router&lt;Component&gt;([
+  { path: '/', handler: () =&gt; `/${navigator.language.startsWith('de') ? 'de' : 'en'}/` },
+  { path: '/{locale:en|de}/', view: Home },
+  { path: '/{locale:en|de}/recipes/{id:\\d+}', view: Recipe },
+  { path: '*', view: NotFound },
+]);
+
+document.addEventListener('texivia', (e) =&gt; setLocale(e.detail.params.locale));</code></pre>
+      <h3>OAuth2 / OpenID Connect (authorization code flow)</h3>
+      <p>The router only routes; the OIDC client (here <a href="https://github.com/authts/oidc-client-ts">oidc-client-ts</a>) does the protocol.</p>
+      <pre><code class="language-typescript">import { UserManager } from 'oidc-client-ts';
+
+const auth = new UserManager({
+  authority: 'https://id.example.com',
+  client_id: 'my-spa',
+  redirect_uri: `${location.origin}/callback`,
+});
+
+const signedIn = async () =&gt; !!(await auth.getUser());
+
+const router = new Router&lt;Component&gt;([
+  // guard: send anonymous users to the identity provider, remember where they wanted to go
+  { path: '/account', view: Account,
+    handler: async (m) =&gt; (await signedIn()) || `/login?returnTo=${encodeURIComponent(m.path)}` },
+  { path: '/login',
+    handler: async (m) =&gt; { await auth.signinRedirect({ state: m.search.returnTo ?? '/' }); return false; } },
+  // the identity provider redirects back here with ?code=…&amp;state=…
+  { path: '/callback',
+    handler: async () =&gt; { const user = await auth.signinRedirectCallback(); return (user.state as string) ?? '/'; } },
+]);</code></pre>
+    </section>
+
     <!-- API -->
     <section>
       <h2>API</h2>
@@ -316,19 +389,19 @@ router.navigate('/search?q=pasta#results');</code></pre>
   path: string;
   view?: T;
   redirect?: string;
-  handler?: (match: MatchedRoute&lt;T&gt;) =&gt; string | boolean | Promise&lt;string | boolean&gt;;
+  handler?: (match: MatchedRoute&lt;T&gt;) =&gt; boolean | string | T | void | Promise&lt;boolean | string | T | void&gt;;
 };</code></pre>
         <ul>
           <li><code>path</code> — URL pattern. Literal segments, <code>{param}</code> or <code>{param:regex}</code> for dynamic segments, <code>*</code> for catch-all.</li>
           <li><code>view</code> — The view or component to render for this route.</li>
           <li><code>redirect</code> — Target path for redirects.</li>
-          <li><code>handler</code> — Async or sync function called before navigation. Return <code>true</code> to proceed, <code>false</code> to cancel, or a string to redirect.</li>
+          <li><code>handler</code> — Async or sync function called before navigation. Return <code>true</code> (or nothing) to proceed, <code>false</code> to cancel, a string to redirect, or a view <code>T</code> to render it instead of <code>view</code> (the URL stays the requested one).</li>
         </ul>
       </div>
 
       <div class="api-item">
         <h3><code>router.start(): Promise&lt;void&gt;</code></h3>
-        <p>Starts the router. Attaches <code>popstate</code>, <code>click</code>, and <code>texivia.goto</code> listeners. Navigates to the current URL.</p>
+        <p>Starts the router. Attaches the <code>popstate</code> and <code>click</code> listeners and navigates to the current URL (without adding a history entry).</p>
       </div>
 
       <div class="api-item">
@@ -338,7 +411,7 @@ router.navigate('/search?q=pasta#results');</code></pre>
 
       <div class="api-item">
         <h3><code>router.navigate(path): Promise&lt;MatchedRoute&lt;T&gt; | null&gt;</code></h3>
-        <p>Navigates to the given path. Runs handlers, pushes history state, and dispatches the <code>texivia</code> event. Returns the matched route or <code>null</code> if no route matches.</p>
+        <p>Navigates to the given path. Runs handlers, pushes history state, and dispatches the <code>texivia</code> event. Returns the matched route, or <code>null</code> if no route matches or a handler cancelled the navigation. When a handler cancels a back/forward navigation, the URL is restored to the last successful one.</p>
         <pre><code class="language-typescript">await router.navigate('/recipe/42');
 await router.navigate('/search?q=pasta#results');</code></pre>
       </div>
