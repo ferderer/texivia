@@ -1,10 +1,10 @@
 # Texivia
 
-**1.2 kB router. Zero dependencies. Any framework.**
+**1.4 kB router. Zero dependencies. Any framework.**
 
 From Latin *textor* (weaver) + *via* (road) — "path weaver."
 
-![Frontend Routers — The Reality Check](docs/comparison.png)
+![Frontend Routers — The Reality Check](https://raw.githubusercontent.com/ferderer/texivia/main/docs/comparison.png)
 
 [![Bundle Size](https://img.shields.io/bundlephobia/minzip/texivia-router)](https://bundlephobia.com/package/texivia-router)
 [![npm version](https://img.shields.io/npm/v/texivia-router)](https://www.npmjs.com/package/texivia-router)

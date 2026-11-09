@@ -13,7 +13,7 @@ No mandatory framework. No bundled opinions. Each package does one thing.
 | [`texivia-store`](./packages/texivia-store) | 1.0.0 | Global reactive store |
 | [`texivia-fetch`](./packages/texivia-fetch) | 1.0.0 | Typed fetch wrapper with structured error handling |
 
-Auth packages (`texivia-session`, `texivia-oidc`) are planned — see [ADR-0005](./adr/ADR-0005-auth-split.md).
+Auth packages (`texivia-session`, `texivia-oidc`) are planned.
 
 ## Dependency graph
 
@@ -133,7 +133,7 @@ use(payload);
 
 ## Architecture decisions
 
-See [`adr/`](./adr/) for the full set of ADRs covering every major design decision.
+Architecture decision records will be published here at a later point.
 
 ## Monorepo
 

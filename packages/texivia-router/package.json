@@ -1,7 +1,7 @@
 {
   "name": "texivia-router",
   "version": "1.0.0",
-  "description": "3 kB framework-agnostic TypeScript router with compiled regex matching",
+  "description": "1.4 kB framework-agnostic TypeScript router with compiled regex matching",
   "author": "Vadim Ferderer (https://ferderer.de/)",
   "license": "Apache-2.0",
   "main": "dist/texivia.js",
