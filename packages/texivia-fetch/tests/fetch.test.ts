@@ -1,30 +1,56 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { apiFetch } from '../src/index';
 
-afterEach(() => { vi.restoreAllMocks(); });
+afterEach(() => { vi.unstubAllGlobals(); });
+
+function respond(body: string | null, status = 200) {
+  vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(body, { status })));
+}
 
 describe('apiFetch()', () => {
   it('returns payload on success', async () => {
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
-      ok:   true,
-      json: () => Promise.resolve({ id: 1, name: 'Alice' }),
-    }));
-
+    respond(JSON.stringify({ id: 1, name: 'Alice' }));
     const { payload, error } = await apiFetch<{ id: number; name: string }>('/api/user');
     expect(error).toBeNull();
     expect(payload).toEqual({ id: 1, name: 'Alice' });
   });
 
-  it('returns error on non-ok response', async () => {
-    const apiError = [Date.now(), 404, 'E_NOT_FOUND', {}];
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
-      ok:   false,
-      json: () => Promise.resolve(apiError),
-    }));
+  it('returns null payload and no error for 204 No Content', async () => {
+    respond(null, 204);
+    const { payload, error } = await apiFetch('/api/delete');
+    expect(error).toBeNull();
+    expect(payload).toBeNull();
+  });
 
+  it('returns E_INVALID_JSON with the HTTP status for a 2xx body that is not JSON', async () => {
+    respond('<html>', 200);
+    const { payload, error } = await apiFetch('/api/user');
+    expect(payload).toBeNull();
+    expect(error?.[1]).toBe(200);
+    expect(error?.[2]).toBe('E_INVALID_JSON');
+  });
+
+  it('returns the server ApiError on non-ok response', async () => {
+    respond(JSON.stringify([1700000000000, 404, 'E_NOT_FOUND', {}]), 404);
     const { payload, error } = await apiFetch('/api/missing');
     expect(payload).toBeNull();
     expect(error?.[2]).toBe('E_NOT_FOUND');
+  });
+
+  it('returns E_HTTP_ERROR with the HTTP status when the error body is not JSON', async () => {
+    respond('<html>Unauthorized</html>', 401);
+    const { payload, error } = await apiFetch('/api/me');
+    expect(payload).toBeNull();
+    expect(error?.[1]).toBe(401);
+    expect(error?.[2]).toBe('E_HTTP_ERROR');
+  });
+
+  it('returns E_HTTP_ERROR for a non-ok response with a JSON body that is no ApiError', async () => {
+    respond('null', 500);
+    const { payload, error } = await apiFetch('/api/broken');
+    expect(payload).toBeNull();
+    expect(error?.[1]).toBe(500);
+    expect(error?.[2]).toBe('E_HTTP_ERROR');
   });
 
   it('returns E_NETWORK_ERROR on fetch failure', async () => {
@@ -46,9 +72,7 @@ describe('apiFetch()', () => {
   });
 
   it('uses GET method when specified', async () => {
-    const mockFetch = vi.fn().mockResolvedValue({
-      ok: true, json: () => Promise.resolve([]),
-    });
+    const mockFetch = vi.fn().mockResolvedValue(new Response('[]'));
     vi.stubGlobal('fetch', mockFetch);
 
     await apiFetch('/api/items', null, { method: 'GET' });
