@@ -16,5 +16,6 @@ jobs:
           node-version: 22
           cache: 'npm'
       - run: npm ci
-      - run: npm test
+      # build first: component/store tests resolve texivia-reactive from its dist/
       - run: npm run build
+      - run: npm test

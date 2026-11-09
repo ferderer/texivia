@@ -12,19 +12,20 @@
     "examples/*"
   ],
   "scripts": {
-    "build":     "npm run build --workspaces --if-present",
-    "test":      "npm run test --workspaces --if-present",
+    "build": "npm run build --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
     "typecheck": "npm run typecheck --workspaces --if-present",
-    "lint":      "npm run lint --workspaces --if-present",
-    "dev":       "npm run dev --workspace=examples/vanilla-demo"
+    "lint": "npm run lint --workspaces --if-present",
+    "dev": "npm run dev --workspace=examples/vanilla-demo"
   },
   "devDependencies": {
+    "@changesets/cli": "^3.0.3",
     "@typescript-eslint/eslint-plugin": "^7.0.0",
-    "@typescript-eslint/parser":        "^7.0.0",
-    "eslint":                           "^8.57.0",
-    "terser":                           "^5.39.0",
-    "typescript":                       "^5.6.3",
-    "vite":                             "^5.4.8",
-    "vitest":                           "^3.1.2"
+    "@typescript-eslint/parser": "^7.0.0",
+    "eslint": "^8.57.0",
+    "terser": "^5.39.0",
+    "typescript": "^5.6.3",
+    "vite": "^5.4.8",
+    "vitest": "^3.1.2"
   }
 }
