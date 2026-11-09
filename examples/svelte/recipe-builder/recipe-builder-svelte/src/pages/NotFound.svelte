@@ -1,11 +1,12 @@
 <script lang="ts">
   import Layout from '../components/layout/Layout.svelte';
+  import { router } from '../router';
 
   let searchQuery: string = $state('');
 
   function handleSearch() {
     if (searchQuery.trim()) {
-      window.location.href = `/search?q=${encodeURIComponent(searchQuery)}`;
+      router.navigate(`/search?q=${encodeURIComponent(searchQuery)}`);
     }
   }
 

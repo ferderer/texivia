@@ -127,7 +127,7 @@ function getAverageRating(recipe: Recipe): number {
   return recipe.ratings.reduce((sum, rating) => sum + rating, 0) / recipe.ratings.length;
 }
 
-let filteredRecipes = $derived(() => {
+let filteredRecipes = $derived.by(() => {
   let filtered = state.recipes;
 
   if (state.searchQuery) {
@@ -149,7 +149,7 @@ let filteredRecipes = $derived(() => {
   return filtered;
 });
 
-let featuredRecipes = $derived(() => {
+let featuredRecipes = $derived.by(() => {
   return recipes
     .sort((a, b) => {
       const avgRatingA = a.ratings.reduce((sum, r) => sum + r, 0) / a.ratings.length;
@@ -159,7 +159,7 @@ let featuredRecipes = $derived(() => {
     .slice(0, 3);
 });
 
-let cuisines = $derived(() => {
+let cuisines = $derived.by(() => {
   return [...new Set(state.recipes.map(recipe => recipe.cuisine))].sort();
 });
 

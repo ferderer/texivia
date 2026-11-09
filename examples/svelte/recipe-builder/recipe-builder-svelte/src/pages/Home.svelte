@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import Layout from '../components/layout/Layout.svelte';
+  import { router } from '../router';
   import { recipesStore } from '../stores/recipes.svelte.js';
 
   let searchQuery = $state('');
@@ -16,7 +17,7 @@
   function handleSearch() {
     if (searchQuery.trim()) {
       recipesStore.setSearchQuery(searchQuery);
-      window.location.href = `/search?q=${encodeURIComponent(searchQuery)}`;
+      router.navigate(`/search?q=${encodeURIComponent(searchQuery)}`);
     }
   }
 

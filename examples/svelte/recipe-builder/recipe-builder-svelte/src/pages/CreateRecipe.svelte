@@ -1,6 +1,7 @@
 <!-- src/pages/CreateRecipe.svelte -->
 <script lang="ts">
   import Layout from '../components/layout/Layout.svelte';
+  import { router } from '../router';
   import { recipesStore } from '../stores/recipes.svelte.js';
   import type { Recipe, Ingredient, Instruction } from '../stores/recipes.svelte.js';
 
@@ -137,7 +138,7 @@
       await recipesStore.addRecipe(newRecipe);
 
       // Redirect to recipe or dashboard
-      window.location.href = '/dashboard';
+      router.navigate('/dashboard');
     } catch (err) {
       error = 'Failed to create recipe. Please try again.';
     } finally {

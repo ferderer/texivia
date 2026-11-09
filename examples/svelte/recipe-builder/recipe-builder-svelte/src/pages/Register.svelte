@@ -1,5 +1,6 @@
 <script lang="ts">
   import Layout from '../components/layout/Layout.svelte';
+  import { router } from '../router';
 
   let firstName: string = $state('');
   let lastName: string = $state('');
@@ -70,7 +71,7 @@
         error = 'An account with this email already exists';
       } else {
         // Success - redirect to login or dashboard
-        window.location.href = '/login?registered=true';
+        router.navigate('/login?registered=true');
       }
     } catch (err) {
       error = 'An error occurred during registration. Please try again.';
