@@ -73,7 +73,7 @@ export async function apiFetch<T>(
     return { payload, error: null };
   }
   catch (err: unknown) {
-    if (err instanceof Error && err.name === 'AbortError')
+    if ((err as { name?: unknown } | null)?.name === 'AbortError')
       return { payload: null, error: [Date.now(), 0, 'E_ABORTED', {}] };
 
     return { payload: null, error: [Date.now(), 500, 'E_NETWORK_ERROR', {}] };
