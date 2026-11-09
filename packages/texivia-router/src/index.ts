@@ -55,7 +55,7 @@ const MAX_REDIRECTS = 10;
  * @template T The type of view to be used with the router.
  */
 class Router<T = unknown> {
-  private segmentRegex = /(?:\/([^\/{}]+)|\/\{([a-zA-Z_$][a-zA-Z0-9_$]*)(?::([^/]+))?\}|(\/))/g;
+  private segmentRegex = /(?:\/([^/{}]+)|\/\{([a-zA-Z_$][a-zA-Z0-9_$]*)(?::([^/]+))?\}|(\/))/g;
   private static readonly EVENT_NAME = 'texivia';
   private readonly _mapping: RegExp | null;
   private readonly _routes: Array<CompiledRoute<T>> = [];
