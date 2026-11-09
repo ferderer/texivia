@@ -1,0 +1,29 @@
+{
+  "name": "texivia-ecosystem",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Monorepo for the Texivia ecosystem packages",
+  "author": "Vadim Ferderer (https://ferderer.de/)",
+  "license": "Apache-2.0",
+  "type": "module",
+  "workspaces": [
+    "packages/*",
+    "examples/*"
+  ],
+  "scripts": {
+    "build":     "npm run build --workspaces --if-present",
+    "test":      "npm run test --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "lint":      "npm run lint --workspaces --if-present",
+    "dev":       "npm run dev --workspace=examples/vanilla-demo"
+  },
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^7.0.0",
+    "@typescript-eslint/parser":        "^7.0.0",
+    "eslint":                           "^8.57.0",
+    "terser":                           "^5.39.0",
+    "typescript":                       "^5.6.3",
+    "vite":                             "^5.4.8",
+    "vitest":                           "^3.1.2"
+  }
+}
