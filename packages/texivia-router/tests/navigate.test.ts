@@ -306,6 +306,56 @@ describe('Router _navigate function', () => {
   // =========================================================================
   // Event detail completeness
   // =========================================================================
+  describe('Handler returning a view (ADR-0066)', () => {
+    it('renders the returned view and keeps the requested URL', async () => {
+      const MemberDashboard = { name: 'MemberDashboard' };
+      const AdminDashboard = { name: 'AdminDashboard' };
+      const router = new Router<{ name: string }>([
+        { path: '/', handler: () => AdminDashboard },
+        { path: '/fallback', view: MemberDashboard },
+      ]);
+
+      const url = new URL('http://localhost/');
+      const result = await navigate(router as Router, url, true);
+
+      expect(result?.view).toBe(AdminDashboard);
+      expect(result?.path).toBe('/');
+      expect(mockPushState).toHaveBeenCalledWith({ path: '/' }, '', url);
+      expect(mockDispatchEvent.mock.calls[0][0].detail.view).toBe(AdminDashboard);
+    });
+
+    it('async handler can return a view, replacing the configured one', async () => {
+      const Configured = { name: 'Configured' };
+      const Chosen = { name: 'Chosen' };
+      const router = new Router([
+        { path: '/switch', view: Configured, handler: async () => Chosen },
+      ]);
+
+      const result = await navigate(router, new URL('http://localhost/switch'), true);
+      expect(result?.view).toBe(Chosen);
+    });
+
+    it('a string is still a redirect, also when views are strings', async () => {
+      const router = new Router<string>([
+        { path: '/a', handler: () => '/b' },
+        { path: '/b', view: 'B' },
+      ]);
+
+      const result = await navigate(router as Router, new URL('http://localhost/a'), true);
+      expect(result?.path).toBe('/b');
+      expect(result?.view).toBe('B');
+    });
+
+    it('a handler returning nothing proceeds with the configured view', async () => {
+      const router = new Router([
+        { path: '/x', view: 'X', handler: () => undefined },
+      ]);
+
+      const result = await navigate(router, new URL('http://localhost/x'), true);
+      expect(result?.view).toBe('X');
+    });
+  });
+
   describe('Popstate reversion (ADR-0043)', () => {
     it('restores the last successful URL, also when that route has no handler', async () => {
       const router = new Router([

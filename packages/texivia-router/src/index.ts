@@ -3,12 +3,14 @@
  *
  * @template T - The type of view associated with the route.
  * @param match - The matched route object.
- * @returns A boolean, string, or a Promise resolving to one of these types.
+ * @returns A boolean, string, view, or a Promise resolving to one of these types.
  *   - If `false`, navigation is cancelled.
- *   - If a `string`, navigation is redirected to the given path.
- *   - If `true`, navigation proceeds as normal.
+ *   - If a `string`, navigation is redirected to the given path (also when T is string).
+ *   - If `true` (or nothing), navigation proceeds as normal.
+ *   - If a view `T`, navigation proceeds and that view replaces the route's view;
+ *     the URL stays the requested one.
  */
-type HookType<T> = (match: MatchedRoute<T>) => boolean | string | Promise<boolean | string>
+type HookType<T> = (match: MatchedRoute<T>) => boolean | string | T | void | Promise<boolean | string | T | void>
 
 /**
  * Configuration for a route in the router.
@@ -202,6 +204,7 @@ class Router<T = unknown> {
     if (result.redirect)
       return this._navigate(new URL(result.redirect, window.location.origin), pushState, redirectCount + 1);
 
+    let event = result.event;
     if (result.handler) {
       const hookResult = await Promise.resolve(result.handler(result.event));
       if (hookResult === false) {
@@ -212,14 +215,16 @@ class Router<T = unknown> {
       }
       if (typeof hookResult === 'string')
         return this._navigate(new URL(hookResult, window.location.origin), pushState, redirectCount + 1);
+      if (hookResult !== true && hookResult !== undefined && hookResult !== null)
+        event = { ...event, view: hookResult as T };
     }
 
     this._currentUrl = url.href;
     if (pushState)
       window.history.pushState({ path: url.pathname }, '', url);
 
-    document.dispatchEvent(new CustomEvent(Router.EVENT_NAME, { detail: result.event, bubbles: true }));
-    return result.event;
+    document.dispatchEvent(new CustomEvent(Router.EVENT_NAME, { detail: event, bubbles: true }));
+    return event;
   }
 
   /**
