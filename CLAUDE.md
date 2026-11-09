@@ -14,7 +14,7 @@ npm workspaces monorepo (root package `texivia-ecosystem`, private):
 - `examples/vanilla-demo` – workspace member, uses router + component + fetch
 - `examples/svelte/*`, `examples/vue/*` – standalone apps (own lockfile), depend on `file:…/packages/texivia-router`
 - `benchmarks/router-benchmark` – matching-strategy benchmark (Node)
-- `docs/` – static documentation page (`index.html`) and the README comparison image
+- `docs/` – the README comparison image. The documentation page lives on the website (https://ferderer.de/projects/texivia, also `homepage` in the router package.json), not in this repo.
 
 Each package: `src/index.ts`, `tests/*.test.ts` (Vitest + jsdom), `vite.config.ts` calling the shared `libConfig()` from `../../vite.lib.ts` (lib build, Terser, dependencies external), `tsconfig.json` extending `../../tsconfig.base.json`. `npm run build` = `vite build && tsc --emitDeclarationOnly && node ../../scripts/cts-types.mjs` (→ `dist/index.d.ts` for `import`, `dist/index.d.cts` for `require`; `exports` maps each condition to its own `types`). Relative imports in package sources use `.js` extensions (needed in the emitted ESM declarations).
 
