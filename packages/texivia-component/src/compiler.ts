@@ -6,22 +6,35 @@
  *   write-back handler. Runs before pass 2 so injected value="…" attrs
  *   are never misread as @event directives.
  *
- *   <input type="text"     @bind="email">          → value injected + data-eid
- *   <input type="checkbox" @bind="active">          → checked injected + data-eid
- *   <input type="radio"    @bind="size" value="M">  → checked if match
- *   <textarea              @bind="bio">             → inner text replaced
- *   <select                @bind="country">         → matching <option> selected
+ *   <input type="text"     @bind="email">          → value injected, written back on input
+ *   <input type="checkbox" @bind="active">          → checked injected, written back on change
+ *   <input type="radio"    @bind="size" value="M">  → checked if match, written back on change
+ *   <textarea              @bind="bio">             → inner text replaced, written back on input
+ *   <select                @bind="country">         → matching <option> selected, written back on change
+ *
+ *   Injected values are HTML-escaped. Values interpolated by the template
+ *   itself (`${…}`) are not – escape untrusted data there.
  *
  * Pass 2 — @event[.modifier…]="handler"
  *   <button @click="save">           → data-eid
  *   <form   @submit.prevent="send">  → data-eid, calls e.preventDefault()
  *   Modifiers: .prevent  .stop  .once
+ *   The handler runs only for its own event type.
+ *
+ * Several directives on one element (e.g. @bind and @change) end up as one
+ * data-eid attribute with space-separated keys.
  *
  * .once is implemented with a consumed flag per registration — correct
  * across re-renders because each render creates a fresh handler closure.
  */
 
+import { DELEGATED_EVENTS } from './events';
 import type { Scope } from './events';
+
+/** Escapes a value for an attribute value or element text. */
+function escape(value: unknown): string {
+  return String(value ?? '').replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
+}
 
 type MethodFn<C> = (ctx: C, e: Event) => void;
 
@@ -46,7 +59,7 @@ export function compileBind<C>(html: string, cc: CompilerContext<C>): string {
       const isRadio    = /type\s*=\s*["']radio["']/i.test(tag);
       const value      = cc.getState(key);
 
-      const eid = cc.scope.register((e: Event) => {
+      const eid = cc.scope.register(isCheckbox || isRadio ? 'change' : 'input', (e: Event) => {
         const target = e.target as HTMLInputElement;
         cc.setState(key, isCheckbox ? target.checked : target.value);
       });
@@ -62,7 +75,7 @@ export function compileBind<C>(html: string, cc: CompilerContext<C>): string {
         return `${before}${checked} data-eid="${eid}"${after}`;
       }
 
-      return `${before}value="${value ?? ''}" data-eid="${eid}"${after}`;
+      return `${before}value="${escape(value)}" data-eid="${eid}"${after}`;
     }
   );
 
@@ -70,11 +83,11 @@ export function compileBind<C>(html: string, cc: CompilerContext<C>): string {
   html = html.replace(
     /(<textarea[^>]*)@bind="(\w+)"([^>]*>)[\s\S]*?<\/textarea>/gi,
     (_, open: string, key: string, rest: string) => {
-      const value = cc.getState(key) ?? '';
-      const eid   = cc.scope.register((e: Event) => {
+      const value = cc.getState(key);
+      const eid   = cc.scope.register('input', (e: Event) => {
         cc.setState(key, (e.target as HTMLTextAreaElement).value);
       });
-      return `${open}data-eid="${eid}"${rest}${value}</textarea>`;
+      return `${open}data-eid="${eid}"${rest}${escape(value)}</textarea>`;
     }
   );
 
@@ -83,7 +96,7 @@ export function compileBind<C>(html: string, cc: CompilerContext<C>): string {
     /(<select[^>]*)@bind="(\w+)"([^>]*>)([\s\S]*?)<\/select>/gi,
     (_, open: string, key: string, rest: string, options: string) => {
       const value   = cc.getState(key) ?? '';
-      const eid     = cc.scope.register((e: Event) => {
+      const eid     = cc.scope.register('change', (e: Event) => {
         cc.setState(key, (e.target as HTMLSelectElement).value);
       });
       const patched = options.replace(
@@ -104,13 +117,15 @@ export function compileEvents<C>(html: string, cc: CompilerContext<C>): string {
   return html.replace(
     /@([\w.]+)="(\w+)"/g,
     (_, directive: string, name: string) => {
-      const [, ...modifiers] = directive.split('.');
+      const [type, ...modifiers] = directive.split('.');
+      if (!DELEGATED_EVENTS.includes(type))
+        console.warn(`[texivia-component] event not delegated: "@${type}"`);
       const prevent  = modifiers.includes('prevent');
       const stop     = modifiers.includes('stop');
       const once     = modifiers.includes('once');
       let   consumed = false;
 
-      const eid = cc.scope.register((e: Event) => {
+      const eid = cc.scope.register(type, (e: Event) => {
         if (once && consumed) return;
         if (once) consumed = true;
 
@@ -127,6 +142,22 @@ export function compileEvents<C>(html: string, cc: CompilerContext<C>): string {
   );
 }
 
+// ─── Pass 3: one data-eid per element ────────────────────────────────────────
+
+/** Joins several data-eid attributes of one start tag into one (the HTML parser keeps only the first). */
+export function mergeEids(html: string): string {
+  return html.replace(/<[a-z][^>]*>/gi, (tag) => {
+    const keys = [...tag.matchAll(/\sdata-eid="([^"]*)"/g)].map((m) => m[1]);
+    if (keys.length < 2) return tag;
+    let first = true;
+    return tag.replace(/\sdata-eid="[^"]*"/g, () => {
+      if (!first) return '';
+      first = false;
+      return ` data-eid="${keys.join(' ')}"`;
+    });
+  });
+}
+
 export function compile<C>(html: string, cc: CompilerContext<C>): string {
-  return compileEvents(compileBind(html, cc), cc);
+  return mergeEids(compileEvents(compileBind(html, cc), cc));
 }

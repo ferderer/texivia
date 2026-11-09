@@ -31,24 +31,13 @@ describe('component()', () => {
   it('re-renders on state mutation', () => {
     const C = component({
       state:    { count: 0 },
-      template: ({ count }) => `<span id="v">${count}</span>`,
+      template: ({ count }) => `<span id="v">${count}</span><button @click="inc" id="b">+</button>`,
       inc(ctx)  { ctx.state.count++; },
     });
-    const inst = C();
-    inst.mount(app());
+    C().mount(app());
     expect(app().querySelector('#v')?.textContent).toBe('0');
-
-    // Trigger via the delegation system
-    const btn = document.createElement('button');
-    btn.setAttribute('data-eid', 'fake');
-    app().appendChild(btn);
-    // Direct state mutation is the cleanest unit test approach
-    (inst as unknown as { state: { count: number } }).state;
-    // Verify reactivity by calling method via ctx
-    const ctx = { state: { count: 0 } };
-    const inc = (C as unknown as { def: { inc: (c: typeof ctx) => void } });
-    void inc; // just ensure the component re-renders through state
-    expect(app().querySelector('#v')).not.toBeNull();
+    app().querySelector('#b')!.dispatchEvent(new Event('click', { bubbles: true }));
+    expect(app().querySelector('#v')?.textContent).toBe('1');
   });
 
   it('renders props', () => {
@@ -236,7 +225,7 @@ describe('batch()', () => {
     let renders = 0;
     const C = component({
       state:    { a: 0, b: 0, c: 0 },
-      template: ({ a, b, c }) => { renders++; return `<p>${a}${b}${c}</p>`; },
+      template: ({ a, b, c }) => { renders++; return `<p>${a}${b}${c}</p><button @click="reset" id="b">x</button>`; },
       reset(ctx) {
         ctx.batch(() => {
           ctx.state.a = 1;
@@ -245,21 +234,140 @@ describe('batch()', () => {
         });
       },
     });
-    const inst = C();
-    inst.mount(app());
+    C().mount(app());
     renders = 0; // discount initial render
+    app().querySelector('#b')!.dispatchEvent(new Event('click', { bubbles: true }));
+    expect(renders).toBe(1);
+    expect(app().querySelector('p')?.textContent).toBe('123');
+  });
+});
 
-    // Call reset via direct method invocation
-    const def = C as unknown as { _def?: unknown };
-    void def;
-    // Simulate: access the instance internals to call reset
-    // In real usage this is triggered by @click="reset" — test via event
-    const btn = document.createElement('button');
-    btn.setAttribute('data-eid', 'fake-reset');
-    app().appendChild(btn);
-    // We can't easily wire this without a live @click, so test batch directly
-    // via the reactive package tests. This test confirms no double-renders
-    // from the initial mount at least.
-    expect(renders).toBe(0); // no extra renders triggered here
+describe('@bind escaping', () => {
+  it('escapes the injected input value', () => {
+    const C = component({
+      state:    { name: '"><img src=x onerror="window.__xss=1">' },
+      template: () => `<input @bind="name" id="i">`,
+    });
+    C().mount(app());
+    expect(app().querySelector('img')).toBeNull();
+    expect(app().querySelector<HTMLInputElement>('#i')?.value).toBe('"><img src=x onerror="window.__xss=1">');
+  });
+
+  it('escapes the injected textarea content', () => {
+    const C = component({
+      state:    { bio: '</textarea><img src=x>' },
+      template: () => `<textarea @bind="bio" id="t"></textarea>`,
+    });
+    C().mount(app());
+    expect(app().querySelector('img')).toBeNull();
+    expect(app().querySelector<HTMLTextAreaElement>('#t')?.value).toBe('</textarea><img src=x>');
+  });
+
+  it('does not turn an injected @event="…" into a directive', () => {
+    const C = component({
+      state:    { v: 'x" @click="boom' },
+      template: () => `<input @bind="v" id="i">`,
+      boom: vi.fn(),
+    });
+    C().mount(app());
+    expect(app().querySelector<HTMLInputElement>('#i')?.value).toBe('x" @click="boom');
+  });
+});
+
+describe('event types', () => {
+  it('a @click handler does not run on focus', () => {
+    const click = vi.fn();
+    const C = component({ template: () => `<button @click="click" id="b">x</button>`, click });
+    C().mount(app());
+    app().querySelector('#b')!.dispatchEvent(new Event('focus'));
+    expect(click).not.toHaveBeenCalled();
+  });
+
+  it('a click inside a @submit form is not a submit', () => {
+    const send = vi.fn();
+    const C = component({
+      template: () => `<form @submit.prevent="send"><input id="i"></form>`,
+      send,
+    });
+    C().mount(app());
+    const click = new MouseEvent('click', { bubbles: true, cancelable: true });
+    app().querySelector('#i')!.dispatchEvent(click);
+    expect(send).not.toHaveBeenCalled();
+    expect(click.defaultPrevented).toBe(false);
+  });
+
+  it('runs the nearest handler of the matching type, also on an ancestor', () => {
+    const send = vi.fn();
+    const C = component({
+      template: () => `<form @submit.prevent="send" id="f"><button @click="noop" id="b">x</button></form>`,
+      send,
+      noop() {},
+    });
+    C().mount(app());
+    app().querySelector('#f')!.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    expect(send).toHaveBeenCalledTimes(1);
+  });
+
+  it('@bind on a text input writes back on input, not on keydown', () => {
+    let ctx: { state: { text: string } } | undefined;
+    const C = component({
+      state:    { text: '' },
+      template: () => `<input @bind="text" id="i">`,
+      afterRender(_, c) { ctx = c; },
+    });
+    C().mount(app());
+    const input = app().querySelector<HTMLInputElement>('#i')!;
+    input.value = 'a';
+    input.dispatchEvent(new Event('keydown', { bubbles: true }));
+    expect(ctx!.state.text).toBe('');
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    expect(ctx!.state.text).toBe('a');
+  });
+
+  it('@bind on a checkbox writes back on change', () => {
+    let ctx: { state: { on: boolean } } | undefined;
+    const C = component({
+      state:    { on: false },
+      template: () => `<input type="checkbox" @bind="on" id="c">`,
+      afterRender(_, c) { ctx = c; },
+    });
+    C().mount(app());
+    const cb = app().querySelector<HTMLInputElement>('#c')!;
+    cb.checked = true;
+    cb.dispatchEvent(new Event('change', { bubbles: true }));
+    expect(ctx!.state.on).toBe(true);
+  });
+});
+
+describe('several directives on one element', () => {
+  it('@bind and @change both work', () => {
+    const save = vi.fn();
+    let ctx: { state: { text: string } } | undefined;
+    const C = component({
+      state:    { text: '' },
+      template: () => `<input @bind="text" @change="save" id="i">`,
+      save,
+      afterRender(_, c) { ctx = c; },
+    });
+    C().mount(app());
+    const input = app().querySelector<HTMLInputElement>('#i')!;
+    expect(input.dataset.eid!.split(' ')).toHaveLength(2);
+    input.value = 'x';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    expect(ctx!.state.text).toBe('x');
+    app().querySelector('#i')!.dispatchEvent(new Event('change', { bubbles: true }));
+    expect(save).toHaveBeenCalledTimes(1);
+  });
+
+  it('@click and @keydown on one button', () => {
+    const click = vi.fn();
+    const key = vi.fn();
+    const C = component({ template: () => `<button @click="click" @keydown="key" id="b">x</button>`, click, key });
+    C().mount(app());
+    const btn = app().querySelector('#b')!;
+    btn.dispatchEvent(new Event('click', { bubbles: true }));
+    btn.dispatchEvent(new Event('keydown', { bubbles: true }));
+    expect(click).toHaveBeenCalledTimes(1);
+    expect(key).toHaveBeenCalledTimes(1);
   });
 });
