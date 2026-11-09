@@ -7,7 +7,7 @@ No mandatory framework. No bundled opinions. Each package does one thing.
 
 | Package | Version | Description |
 |---|---|---|
-| [`texivia-router`](./packages/texivia-router) | 1.0.0 | 1.4 kB framework-agnostic router with compiled regex matching |
+| [`texivia-router`](./packages/texivia-router) | 1.0.0 | 1.5 kB framework-agnostic router with compiled regex matching |
 | [`texivia-reactive`](./packages/texivia-reactive) | 1.0.0 | Proxy-based reactive state with `batch()` |
 | [`texivia-component`](./packages/texivia-component) | 1.0.0 | Component factory — `@bind`, `@event`, event delegation |
 | [`texivia-store`](./packages/texivia-store) | 1.0.0 | Global reactive store |
