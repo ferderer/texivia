@@ -1,0 +1,20 @@
+{
+  "name": "vanilla-demo",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Texivia ecosystem demo — vanilla JS SPA, no framework",
+  "type": "module",
+  "scripts": {
+    "dev":     "vite",
+    "build":   "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "texivia-router":    "workspace:*",
+    "texivia-component": "workspace:*",
+    "texivia-fetch":     "workspace:*"
+  },
+  "devDependencies": {
+    "vite": "^5.4.8"
+  }
+}

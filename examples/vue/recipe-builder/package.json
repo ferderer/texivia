@@ -11,7 +11,7 @@
     "type-check": "vue-tsc --build"
   },
   "dependencies": {
-    "texivia-router": "file:../../..",
+    "texivia-router": "file:../../../packages/texivia-router",
     "vue": "^3.5.29"
   },
   "devDependencies": {
