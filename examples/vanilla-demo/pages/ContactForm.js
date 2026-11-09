@@ -6,7 +6,7 @@ export const ContactForm = component({
     size: 'M', newsletter: false, submitted: false,
   },
 
-  template: ({ name, email, message, size, newsletter, submitted }) => {
+  template: ({ name, email, submitted }) => {
     if (submitted) return `
       <section class="page">
         <h1>Sent ✓</h1>
@@ -39,10 +39,6 @@ export const ContactForm = component({
         <label class="checkbox-label">
           <input type="checkbox" @bind="newsletter"> Subscribe to newsletter
         </label>
-
-        <p class="preview">
-          ${name || '—'} · ${email || '—'} · size ${size} · newsletter ${newsletter ? 'yes' : 'no'}
-        </p>
 
         <button @click.prevent="submit">Send</button>
         <p class="back"><a href="/">← Back</a></p>
