@@ -24,7 +24,7 @@
   "keywords": ["store", "state", "reactive", "spa", "texivia"],
   "repository": { "type": "git", "url": "https://github.com/ferderer/texivia.git" },
   "dependencies": {
-    "texivia-reactive": "workspace:*"
+    "texivia-reactive": "^1.0.0"
   },
   "devDependencies": {
     "terser":     "^5.39.0",
