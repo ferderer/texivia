@@ -19,3 +19,9 @@ jobs:
       # build first: component/store tests resolve texivia-reactive from its dist/
       - run: npm run build
       - run: npm test
+      # the contract of the Recipe Builder backend, checked against the reference server
+      - name: Recipe API contract
+        run: |
+          node examples/recipe-api/reference-server.mjs &
+          for i in $(seq 1 20); do curl -sf http://localhost:8080/api/recipes >/dev/null && break; sleep 0.5; done
+          node examples/recipe-api/contract-test.mjs

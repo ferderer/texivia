@@ -153,8 +153,9 @@ All packages ship ES modules (`import`) and CommonJS (`require`), each with matc
 - [`examples/vanilla-demo`](./examples/vanilla-demo) — counter, recipe detail (async load + abort), contact form (all `@bind` variants)
 - [`examples/svelte`](./examples/svelte) — Svelte 5 (no SvelteKit): `micro` and the `recipe-builder` sample app
 - [`examples/vue`](./examples/vue) — Vue 3: `micro` and the `recipe-builder` sample app
+- [`examples/recipe-api`](./examples/recipe-api) — the backend contract of the two Recipe Builder apps (`texivia-router` + `texivia-fetch`), a reference server and a contract test
 
-The Svelte and Vue examples are standalone projects: build the router first (`npm run build -w packages/texivia-router`), then run `npm ci && npm run dev` in the example folder.
+The Svelte and Vue examples are standalone projects: build the packages first (`npm run build -w packages`), then run `npm ci && npm run dev` in the example folder. The Recipe Builders also need a backend, see [`examples/recipe-api`](./examples/recipe-api).
 
 ## Architecture decisions
 

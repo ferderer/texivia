@@ -14,6 +14,7 @@ npm workspaces monorepo (root package `texivia-ecosystem`, private):
 - `examples/vanilla-demo` – workspace member, uses router + component + fetch
 - `examples/svelte/*`, `examples/vue/*` – standalone apps (own lockfile), depend on `file:…/packages/texivia-router`
 - `benchmarks/router-benchmark` – matching-strategy benchmark (Node)
+- `examples/recipe-api` – backend contract (`API.md`), `seed.json`, dependency-free `reference-server.mjs` and `contract-test.mjs` for the two Recipe Builder apps; CI runs the contract test against the reference server
 - `docs/` – the README comparison image. The documentation page lives on the website (https://ferderer.de/projects/texivia, also `homepage` in the router package.json), not in this repo.
 
 Each package: `src/index.ts`, `tests/*.test.ts` (Vitest + jsdom), `vite.config.ts` calling the shared `libConfig()` from `../../vite.lib.ts` (lib build, Terser, dependencies external), `tsconfig.json` extending `../../tsconfig.base.json`. `npm run build` = `vite build && tsc --emitDeclarationOnly && node ../../scripts/cts-types.mjs` (→ `dist/index.d.ts` for `import`, `dist/index.d.cts` for `require`; `exports` maps each condition to its own `types`). Relative imports in package sources use `.js` extensions (needed in the emitted ESM declarations).
@@ -54,6 +55,7 @@ Changesets + npm trusted publishing (`.github/workflows/release.yml`). Merging t
 - The wildcard `*` is always matched last, whatever its position in the config. The constructor throws on malformed paths, `//` and duplicate parameter names. `MAX_REDIRECTS = 10` (throws `Texivia: redirect limit exceeded`). Trailing slashes are not normalized.
 - Redirects resolve via `new URL(redirect, window.location.origin)`. `_currentUrl` is updated after every successful navigation; on an aborted popstate navigation, the URL is restored to it.
 - Link interception ignores modifier keys, non-left clicks, a target other than empty/`_self`, `download`, `no-router`, `rel="external"`, cross-origin and hash-only links.
+- `start()` dispatches the event for the current URL during the call (when no handler is async). Register the `texivia` listener **before** calling `router.start()`, in docs and examples alike.
 - Layouts come from framework composition (Svelte: `<Layout>{#snippet body()}…{/snippet}</Layout>`), not from the router.
 - The app creates the router singleton in its own module (e.g. `src/router.ts`).
 
