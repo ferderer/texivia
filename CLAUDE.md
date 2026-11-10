@@ -6,7 +6,7 @@ Ecosystem of small, atomic TypeScript packages for single-page apps. The core is
 
 npm workspaces monorepo (root package `texivia-ecosystem`, private):
 
-- `packages/texivia-router` – router (published, 1.0.x). Builds `dist/texivia.{mjs,cjs}`; keep the base name `texivia`, it is part of the released package. CommonJS output must end in `.cjs` (all packages are `"type": "module"`).
+- `packages/texivia-router` – router (published, 1.1.x). Builds `dist/texivia.{mjs,cjs}`; keep the base name `texivia`, it is part of the released package. CommonJS output must end in `.cjs` (all packages are `"type": "module"`).
 - `packages/texivia-reactive` – Proxy-based reactive state with `batch()`
 - `packages/texivia-component` – component factory (template literals, `@event`, `@bind`, event delegation) → depends on reactive
 - `packages/texivia-store` – global reactive store → depends on reactive

@@ -23,3 +23,4 @@ Chosen option: **Changesets and trusted publishing**. Every change that affects 
 
 * Good: independent versions, generated changelogs, provenance, no secret to leak.
 * A package must exist on npm before a trusted publisher can be configured; new packages are published once by hand.
+* A new trusted publisher is validated by its first publish from the workflow, within 48 hours; every package needs a changeset in that run.
