@@ -26,7 +26,7 @@ The first matching route in config order wins (the wildcard `*` is the exception
 
 * Good: about a dozen lines of matching code; no data structure to maintain.
 * Good: one `exec()` per navigation; no loop over routes in JavaScript.
-* Bad: not faster than the alternatives. A benchmark (`benchmarks/router-benchmark`) shows the regex engine still tries the alternatives one after another: a trie is faster for matches, the combined regex is fastest for non-matches (404). With 1,000 routes the worst case is below 1 ms, so for SPAs the difference does not matter; simplicity does.
+* Bad: the cost per match grows with the number of routes. `exec()` allocates a result array with one entry per route, so a match costs about 0.3 µs with 10 routes, 0.6 µs with 100 and 6 µs with 1,000 (static routes, Node; for a non-match the regex engine returns early and no array is built). A trie is flat (0.3–0.7 µs) but needs about 100 more lines. For the route counts of the target (dozens) the difference is far below what a navigation costs anywhere else, so it does not matter; an app with hundreds of routes is no longer the small SPA Texivia is for.
 * The per-route parameter regex must match whenever the master regex selected the route. If it does not, that is a bug in the router, and it throws instead of returning "no match".
 
 ### Options not chosen
@@ -34,3 +34,4 @@ The first matching route in config order wins (the wildcard `*` is the exception
 * **Loop over per-route matchers / `URLPattern`** — More code; `URLPattern` also lacks support in some browsers.
 * **Trie** — Fastest, but much more code for no practical gain at SPA route counts.
 * **Partitioning by first segment** — +50–80 lines and edge cases (dynamic first segments, wildcard) for no measurable benefit with 10–100 routes.
+* **Static routes in a `Map`, only dynamic ones in the regex** — Saves little: with 60 routes, 15 of them static, 45 capture groups remain. It would also change which route wins when a dynamic route is defined before a static one.
