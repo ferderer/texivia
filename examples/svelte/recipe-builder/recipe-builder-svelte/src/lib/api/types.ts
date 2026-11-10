@@ -1,31 +1,7 @@
-export type ValidationError = [
-  code: string,
-  path: string,
-  value: any,
-]
+// Error and response types come from texivia-fetch; field errors are { code, path, value }.
+export type { ApiError, ApiResponse, ValidationError } from 'texivia-fetch';
 
-export type ApiError = [
-  timestamp: string | number,
-  status: number,
-  code: string,
-  data: Record<string, any>,
-  fields?: ValidationError[],
-]
-
-export type ApiResponse<T> = {
-  payload: T | null,
-  error: ApiError | null,
-}
-
-export type Page<T> = {
-  content: T[];
-  count: number;
-  pages: number;
-  size: number;
-  current: number;
-}
-
-// Recipe types
+// Recipe types, see examples/recipe-api/API.md
 export interface Recipe {
   id: string;
   title: string;
@@ -42,8 +18,8 @@ export interface Recipe {
   images: string[];
   author: string;
   ratings: number[];
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: string; // ISO 8601, set by the server
+  updatedAt: string;
 }
 
 export interface Ingredient {
@@ -67,4 +43,16 @@ export interface NutritionInfo {
   fat: number;
   fiber: number;
   sugar: number;
+}
+
+/** What `create` takes: the server assigns id and timestamps and ignores `ratings`. */
+export type NewRecipe = Omit<Recipe, 'id' | 'createdAt' | 'updatedAt'>;
+
+/** Parameters of `search`, all optional. */
+export interface RecipeSearch {
+  query?: string;
+  cuisine?: string;
+  difficulty?: Recipe['difficulty'];
+  maxCookTime?: number;
+  sort?: 'relevance' | 'rating' | 'cookTime' | 'title';
 }

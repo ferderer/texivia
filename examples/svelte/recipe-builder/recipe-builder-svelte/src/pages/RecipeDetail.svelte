@@ -2,11 +2,12 @@
   import { onMount } from 'svelte';
   import Layout from '../components/layout/Layout.svelte';
   import { recipesStore } from '../stores/recipes.svelte.js';
+  import { averageRating } from '../lib/rating';
 
   let { id }: { id: string } = $props();
 
   let recipe = $derived(recipesStore.recipes.find(r => r.id === id));
-  let averageRating = $derived(recipe ? recipe.ratings.reduce((sum, r) => sum + r, 0) / recipe.ratings.length : 0);
+  let avgRating = $derived(recipe ? averageRating(recipe) : 0);
   let totalTime = $derived(recipe ? recipe.prepTime + recipe.cookTime : 0);
 
   let activeTab: 'ingredients' | 'instructions' | 'nutrition' = $state('ingredients');
@@ -18,8 +19,17 @@
     quantity: (ing.quantity * servings) / (recipe.servings || 1)
   })) : []);
 
-  onMount(() => {
-    if (recipe) {
+  // A deep link opens this page before the list is loaded: fetch just this recipe.
+  let missing = $state(false);
+  onMount(async () => {
+    if (!recipe) missing = (await recipesStore.loadRecipe(id)) !== null;
+  });
+
+  // Start with the recipe's own servings, once per recipe (not again when the list reloads).
+  let scaledFor = '';
+  $effect(() => {
+    if (recipe && scaledFor !== recipe.id) {
+      scaledFor = recipe.id;
       servings = recipe.servings;
     }
   });
@@ -37,7 +47,7 @@
         <!-- Recipe Header -->
         <div class="recipe-header">
           <div class="recipe-image">
-            <img src={recipe.images[0] || '/_/images/placeholder-recipe.jpg'} alt={recipe.title} />
+            <img src={recipe.images[0] || '/_/images/placeholder-recipe.png'} alt={recipe.title} />
             <div class="recipe-badges">
               <span class="difficulty-badge {recipe.difficulty}">{recipe.difficulty}</span>
               {#each recipe.dietaryTags as tag}
@@ -53,7 +63,7 @@
             <div class="recipe-meta">
               <div class="meta-item">
                 <span class="label">Rating</span>
-                <span class="value">⭐ {averageRating.toFixed(1)} ({recipe.ratings.length} reviews)</span>
+                <span class="value">⭐ {avgRating.toFixed(1)} ({recipe.ratings.length} reviews)</span>
               </div>
               <div class="meta-item">
                 <span class="label">Prep Time</span>
@@ -187,12 +197,14 @@
           </div>
         </div>
       </div>
-    {:else}
+    {:else if missing}
       <div class="recipe-not-found">
         <h1>Recipe Not Found</h1>
         <p>The recipe you're looking for doesn't exist or has been removed.</p>
         <a href="/recipes" class="btn-primary">Browse All Recipes</a>
       </div>
+    {:else}
+      <p class="recipe-loading">Loading recipe…</p>
     {/if}
   {/snippet}
 </Layout>

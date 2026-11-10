@@ -2,6 +2,7 @@
   import { onMount } from 'svelte';
   import Layout from '../components/layout/Layout.svelte';
   import { recipesStore } from '../stores/recipes.svelte.js';
+  import { averageRating } from '../lib/rating';
   import type { Recipe } from '../stores/recipes.svelte.js';
 
   // Mock user data - in real app this would come from auth store
@@ -12,13 +13,15 @@
     avatar: '/_/images/avatar-placeholder.jpg'
   };
 
+  onMount(() => { recipesStore.ensureLoaded(); });
+
   // Dashboard stats
   let userRecipes = $derived(recipesStore.recipes.filter(r => r.author === user.name));
   let totalRecipes = $derived(userRecipes.length);
   let totalViews = $derived(userRecipes.reduce((sum, r) => sum + (r.ratings.length * 10), 0)); // Mock views
-  let averageRating = $derived(
+  let avgRating = $derived(
     userRecipes.length > 0
-      ? userRecipes.reduce((sum, r) => sum + (r.ratings.reduce((s, rating) => s + rating, 0) / r.ratings.length), 0) / userRecipes.length
+      ? userRecipes.reduce((sum, r) => sum + averageRating(r), 0) / userRecipes.length
       : 0
   );
 
@@ -33,8 +36,8 @@
   let popularRecipes = $derived(
     [...userRecipes]
       .sort((a, b) => {
-        const avgA = a.ratings.reduce((sum, r) => sum + r, 0) / a.ratings.length;
-        const avgB = b.ratings.reduce((sum, r) => sum + r, 0) / b.ratings.length;
+        const avgA = averageRating(a);
+        const avgB = averageRating(b);
         return avgB - avgA;
       })
       .slice(0, 3)
@@ -101,7 +104,7 @@
         <div class="stat-card">
           <div class="stat-icon rating">⭐</div>
           <div class="stat-content">
-            <h3>{averageRating.toFixed(1)}</h3>
+            <h3>{avgRating.toFixed(1)}</h3>
             <p>Average Rating</p>
           </div>
         </div>
@@ -140,12 +143,12 @@
           <div class="recipes-list">
             {#each recentRecipes as recipe}
               <div class="recipe-item">
-                <img src={recipe.images[0] || '/_/images/placeholder-recipe.jpg'} alt={recipe.title} />
+                <img src={recipe.images[0] || '/_/images/placeholder-recipe.png'} alt={recipe.title} />
                 <div class="recipe-info">
                   <h4><a href="/recipe/{recipe.id}">{recipe.title}</a></h4>
                   <p>{recipe.description}</p>
                   <div class="recipe-meta">
-                    <span>⭐ {(recipe.ratings.reduce((sum, r) => sum + r, 0) / recipe.ratings.length).toFixed(1)}</span>
+                    <span>⭐ {averageRating(recipe).toFixed(1)}</span>
                     <span>👁️ {recipe.ratings.length * 10}</span>
                     <span>🕒 {recipe.cookTime}min</span>
                   </div>
@@ -173,11 +176,11 @@
             {#each popularRecipes as recipe, index}
               <div class="popular-item">
                 <div class="rank">#{index + 1}</div>
-                <img src={recipe.images[0] || '/_/images/placeholder-recipe.jpg'} alt={recipe.title} />
+                <img src={recipe.images[0] || '/_/images/placeholder-recipe.png'} alt={recipe.title} />
                 <div class="popular-info">
                   <h4><a href="/recipe/{recipe.id}">{recipe.title}</a></h4>
                   <div class="popular-stats">
-                    <span>⭐ {(recipe.ratings.reduce((sum, r) => sum + r, 0) / recipe.ratings.length).toFixed(1)}</span>
+                    <span>⭐ {averageRating(recipe).toFixed(1)}</span>
                     <span>👁️ {recipe.ratings.length * 10}</span>
                   </div>
                 </div>

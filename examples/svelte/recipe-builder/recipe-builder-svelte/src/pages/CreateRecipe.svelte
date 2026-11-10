@@ -3,6 +3,7 @@
   import Layout from '../components/layout/Layout.svelte';
   import { router } from '../router';
   import { recipesStore } from '../stores/recipes.svelte.js';
+  import { describeError } from '../lib/api/errors';
   import type { Recipe, Ingredient, Instruction } from '../stores/recipes.svelte.js';
 
   let currentStep: number = $state(1);
@@ -130,12 +131,16 @@
           fiber: Math.round(2 + Math.random() * 10),
           sugar: Math.round(1 + Math.random() * 15)
         },
-        images: images.length > 0 ? images : ['/_/images/placeholder-recipe.jpg'],
+        images: images.length > 0 ? images : ['/_/images/placeholder-recipe.png'],
         author: 'John Doe', // Mock user
         ratings: []
       };
 
-      await recipesStore.addRecipe(newRecipe);
+      const failure = await recipesStore.addRecipe(newRecipe);
+      if (failure) {
+        error = describeError(failure);
+        return;
+      }
 
       // Redirect to recipe or dashboard
       router.navigate('/dashboard');

@@ -86,7 +86,7 @@
         {#each recipesStore.recipes as recipe}
           <a href="/recipe/{recipe.id}" class="recipe-card">
             <div class="recipe-image">
-              <img src={recipe.images[0] || '/_/images/placeholder-recipe.jpg'} alt={recipe.title} />
+              <img src={recipe.images[0] || '/_/images/placeholder-recipe.png'} alt={recipe.title} />
               <div class="recipe-difficulty">{recipe.difficulty}</div>
             </div>
             <div class="recipe-info">

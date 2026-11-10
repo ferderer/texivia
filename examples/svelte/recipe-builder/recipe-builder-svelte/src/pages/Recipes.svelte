@@ -1,7 +1,11 @@
 <script lang="ts">
+  import { onMount } from 'svelte';
   import Layout from '../components/layout/Layout.svelte';
   import { recipesStore } from '../stores/recipes.svelte.js';
+  import { averageRating } from '../lib/rating';
   import type { Recipe } from '../lib/api/types';
+
+  onMount(() => { recipesStore.ensureLoaded(); });
 
   let searchQuery: string = $state('');
   let selectedDifficulty: string = $state('');
@@ -18,8 +22,8 @@
     .sort((a, b) => {
       switch (sortBy) {
         case 'rating':
-          const avgA = a.ratings.reduce((sum, r) => sum + r, 0) / a.ratings.length;
-          const avgB = b.ratings.reduce((sum, r) => sum + r, 0) / b.ratings.length;
+          const avgA = averageRating(a);
+          const avgB = averageRating(b);
           return avgB - avgA;
         case 'cookTime':
           return a.cookTime - b.cookTime;
@@ -100,14 +104,14 @@
         {#each filteredRecipes as recipe (recipe.id)}
           <a href="/recipe/{recipe.id}" class="recipe-card {viewMode}">
             <div class="recipe-image">
-              <img src={recipe.images[0] || '/_/images/placeholder-recipe.jpg'} alt={recipe.title} />
+              <img src={recipe.images[0] || '/_/images/placeholder-recipe.png'} alt={recipe.title} />
               <div class="recipe-difficulty">{recipe.difficulty}</div>
             </div>
             <div class="recipe-info">
               <h3>{recipe.title}</h3>
               <div class="recipe-meta">
                 <span class="cook-time">🕒 {recipe.cookTime}min</span>
-                <span class="rating">⭐ {(recipe.ratings.reduce((sum, r) => sum + r, 0) / recipe.ratings.length).toFixed(1)}</span>
+                <span class="rating">⭐ {averageRating(recipe).toFixed(1)}</span>
               </div>
             </div>
           </a>

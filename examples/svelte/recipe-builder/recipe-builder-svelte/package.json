@@ -10,6 +10,7 @@
     "check": "svelte-check --tsconfig ./tsconfig.app.json && tsc -p tsconfig.node.json"
   },
   "dependencies": {
+    "texivia-fetch": "file:../../../../packages/texivia-fetch",
     "texivia-router": "file:../../../../packages/texivia-router"
   },
   "devDependencies": {

@@ -2,6 +2,10 @@
   import { onMount } from 'svelte';
   import Layout from '../components/layout/Layout.svelte';
   import { recipesStore } from '../stores/recipes.svelte.js';
+  import { api } from '../lib/api';
+  import { averageRating } from '../lib/rating';
+  import { describeError } from '../lib/api/errors';
+  import type { Recipe, RecipeSearch } from '../lib/api/types';
 
   let searchQuery: string = $state('');
   let selectedCuisine: string = $state('');
@@ -13,50 +17,36 @@
   // Get unique values for filters
   let cuisines = $derived([...new Set(recipesStore.recipes.map(r => r.cuisine))].sort());
   let difficulties = $derived([...new Set(recipesStore.recipes.map(r => r.difficulty))]);
-  let maxAvailableCookTime = $derived(Math.max(...recipesStore.recipes.map(r => r.cookTime)));
+  let maxAvailableCookTime = $derived(Math.max(0, ...recipesStore.recipes.map(r => r.cookTime)));
 
-  // Search and filter recipes
-  let searchResults = $derived(recipesStore.recipes
-    .filter(recipe => {
-      // Text search
-      if (searchQuery.trim()) {
-        const query = searchQuery.toLowerCase();
-        return (
-          recipe.title.toLowerCase().includes(query) ||
-          recipe.description.toLowerCase().includes(query) ||
-          recipe.cuisine.toLowerCase().includes(query) ||
-          recipe.ingredients.some(ing => ing.name.toLowerCase().includes(query)) ||
-          recipe.dietaryTags.some(tag => tag.toLowerCase().includes(query))
-        );
-      }
-      return true;
-    })
-    .filter(recipe => !selectedCuisine || recipe.cuisine === selectedCuisine)
-    .filter(recipe => !selectedDifficulty || recipe.difficulty === selectedDifficulty)
-    .filter(recipe => !maxCookTime || recipe.cookTime <= maxCookTime)
-    .sort((a, b) => {
-      switch (sortBy) {
-        case 'relevance':
-          // Simple relevance: title matches first, then description
-          if (searchQuery.trim()) {
-            const query = searchQuery.toLowerCase();
-            const aInTitle = a.title.toLowerCase().includes(query) ? 1 : 0;
-            const bInTitle = b.title.toLowerCase().includes(query) ? 1 : 0;
-            if (aInTitle !== bInTitle) return bInTitle - aInTitle;
-          }
-          return 0;
-        case 'rating':
-          const avgA = a.ratings.reduce((sum, r) => sum + r, 0) / a.ratings.length;
-          const avgB = b.ratings.reduce((sum, r) => sum + r, 0) / b.ratings.length;
-          return avgB - avgA;
-        case 'cookTime':
-          return a.cookTime - b.cookTime;
-        case 'title':
-          return a.title.localeCompare(b.title);
-        default:
-          return 0;
-      }
-    }));
+  // The server does the searching (GET /api/recipes/search). Typing is debounced, and a newer
+  // search cancels the one still running (AbortSignal), so a slow answer never overwrites a fresh one.
+  let searchResults: Recipe[] = $state([]);
+  let searching = $state(false);
+  let searchError = $state('');
+
+  $effect(() => {
+    const params: RecipeSearch = {
+      query: searchQuery.trim(),
+      cuisine: selectedCuisine,
+      difficulty: (selectedDifficulty || undefined) as RecipeSearch['difficulty'],
+      maxCookTime: maxCookTime || undefined,
+      sort: sortBy,
+    };
+    const controller = new AbortController();
+    searching = true;
+    const timer = setTimeout(async () => {
+      const { payload, error } = await api.recipes.search(params, controller.signal);
+      if (controller.signal.aborted) return;
+      searching = false;
+      searchError = error ? describeError(error) : '';
+      if (!error) searchResults = payload ?? [];
+    }, 250);
+    return () => {
+      clearTimeout(timer);
+      controller.abort();
+    };
+  });
 
   function clearFilters() {
     searchQuery = '';
@@ -75,6 +65,7 @@
   }
 
   onMount(() => {
+    recipesStore.ensureLoaded(); // for the filter lists
     updateSearchFromURL();
   });
 </script>
@@ -184,7 +175,7 @@
             {#each searchResults as recipe (recipe.id)}
               <a href="/recipe/{recipe.id}" class="result-card {viewMode}">
                 <div class="result-image">
-                  <img src={recipe.images[0] || '/_/images/placeholder-recipe.jpg'} alt={recipe.title} />
+                  <img src={recipe.images[0] || '/_/images/placeholder-recipe.png'} alt={recipe.title} />
                   <div class="result-difficulty">{recipe.difficulty}</div>
                 </div>
                 <div class="result-info">
@@ -193,7 +184,7 @@
                   <div class="result-meta">
                     <span class="cuisine">{recipe.cuisine}</span>
                     <span class="cook-time">🕒 {recipe.cookTime}min</span>
-                    <span class="rating">⭐ {(recipe.ratings.reduce((sum, r) => sum + r, 0) / recipe.ratings.length).toFixed(1)}</span>
+                    <span class="rating">⭐ {averageRating(recipe).toFixed(1)}</span>
                   </div>
                   {#if recipe.dietaryTags.length > 0}
                     <div class="dietary-tags">
@@ -206,12 +197,19 @@
               </a>
             {:else}
               <div class="no-results">
+                {#if searching}
+                  <h3>Searching…</h3>
+                {:else if searchError}
+                  <h3>Search failed</h3>
+                  <p>{searchError}</p>
+                {:else}
                 <h3>No recipes found</h3>
                 {#if searchQuery || selectedCuisine || selectedDifficulty || maxCookTime}
                   <p>Try adjusting your search terms or filters</p>
                   <button onclick={clearFilters} class="btn-primary">Clear Filters</button>
                 {:else}
                   <p>Start by searching for recipes, ingredients, or cuisines</p>
+                {/if}
                 {/if}
               </div>
             {/each}
