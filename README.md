@@ -1,17 +1,18 @@
 # Texivia Ecosystem
 
-A constellation of atomic, independently versioned packages for building vanilla JS SPAs.
-No mandatory framework. No bundled opinions. Each package does one thing.
+Small, atomic TypeScript packages for single-page apps: a 1.4 kB framework-agnostic router, reactive state, components, store and fetch. Zero dependencies, any framework.
+
+The packages are independently versioned. No mandatory framework, no bundled opinions, each package does one thing: pick only what you need.
 
 ## Packages
 
 | Package | Version | Description |
 |---|---|---|
-| [`texivia-router`](./packages/texivia-router) | 1.0.0 | 1.4 kB framework-agnostic router with compiled regex matching |
-| [`texivia-reactive`](./packages/texivia-reactive) | 1.0.0 | Proxy-based reactive state with `batch()` |
-| [`texivia-component`](./packages/texivia-component) | 1.0.0 | Component factory — `@bind`, `@event`, event delegation |
-| [`texivia-store`](./packages/texivia-store) | 1.0.0 | Global reactive store |
-| [`texivia-fetch`](./packages/texivia-fetch) | 1.0.0 | Typed fetch wrapper with structured error handling |
+| [`texivia-router`](./packages/texivia-router) | 1.1.0 | 1.4 kB framework-agnostic router with compiled regex matching |
+| [`texivia-reactive`](./packages/texivia-reactive) | 1.0.1 | Proxy-based reactive state with `batch()` |
+| [`texivia-component`](./packages/texivia-component) | 1.0.1 | Component factory — `@bind`, `@event`, event delegation |
+| [`texivia-store`](./packages/texivia-store) | 1.0.1 | Global reactive store |
+| [`texivia-fetch`](./packages/texivia-fetch) | 1.0.1 | Typed fetch wrapper with structured error handling |
 
 Auth packages (`texivia-session`, `texivia-oidc`) are planned.
 
