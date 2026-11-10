@@ -1,42 +1,24 @@
-# recipe-builder
+# Recipe Builder (Vue 3)
 
-This template should help get you started developing with Vue 3 in Vite.
+A recipe site built with the Texivia packages: `texivia-router` for the pages, `texivia-fetch` for the API. Vue 3 with `<script setup>`, no router or store library.
 
-## Recommended IDE Setup
+```bash
+# from the repository root: the apps depend on the built packages
+npm ci && npm run build -w packages
 
-[VS Code](https://code.visualstudio.com/) + [Vue (Official)](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
-
-## Recommended Browser Setup
-
-- Chromium-based browsers (Chrome, Edge, Brave, etc.):
-  - [Vue.js devtools](https://chromewebstore.google.com/detail/vuejs-devtools/nhdogjmejiglipccpnnnanhbledajbpd)
-  - [Turn on Custom Object Formatter in Chrome DevTools](http://bit.ly/object-formatters)
-- Firefox:
-  - [Vue.js devtools](https://addons.mozilla.org/en-US/firefox/addon/vue-js-devtools/)
-  - [Turn on Custom Object Formatter in Firefox DevTools](https://fxdx.dev/firefox-devtools-custom-object-formatters/)
-
-## Type Support for `.vue` Imports in TS
-
-TypeScript cannot handle type information for `.vue` imports by default, so we replace the `tsc` CLI with `vue-tsc` for type checking. In editors, we need [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) to make the TypeScript language service aware of `.vue` types.
-
-## Customize configuration
-
-See [Vite Configuration Reference](https://vite.dev/config/).
-
-## Project Setup
-
-```sh
-npm install
+node examples/recipe-api/reference-server.mjs     # the backend, http://localhost:8080
+cd examples/vue/recipe-builder
+npm ci && npm run dev                              # the Vite dev server proxies /api to port 8080
 ```
 
-### Compile and Hot-Reload for Development
+Any backend that follows [`examples/recipe-api/API.md`](../../recipe-api/API.md) works instead of the reference server.
 
-```sh
-npm run dev
-```
+| Path | |
+|---|---|
+| `src/router.ts` | the router singleton, one route per page |
+| `src/App.vue` | the only listener of the `texivia` event (added before `router.start()`) |
+| `src/lib/api/` | `endpoints.ts` (paths), `index.ts` (typed `api.recipes.*` on `apiFetch`), `types.ts`, `errors.ts` (`describeError`) |
+| `src/stores/recipes.ts` | the recipes (`reactive` store): `loadRecipes`, `ensureLoaded`, `loadRecipe`, `addRecipe`, … |
+| `src/pages/` | one component per page (`.vue`); the Search page asks the server (debounced, cancels the previous request) |
 
-### Type-Check, Compile and Minify for Production
-
-```sh
-npm run build
-```
+Login, register and the dashboard user are mock-ups; the API has no authentication yet.

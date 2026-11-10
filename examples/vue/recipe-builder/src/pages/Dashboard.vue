@@ -1,7 +1,10 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onMounted } from 'vue'
 import AppLayout from '../components/layout/AppLayout.vue'
 import { recipesStore } from '../stores/recipes'
+import { averageRating } from '../lib/rating'
+
+onMounted(() => { recipesStore.ensureLoaded() })
 
 const user = {
   name: 'John Doe',
@@ -13,9 +16,9 @@ const user = {
 const userRecipes = computed(() => recipesStore.recipes.filter(r => r.author === user.name))
 const totalRecipes = computed(() => userRecipes.value.length)
 const totalViews = computed(() => userRecipes.value.reduce((sum, r) => sum + (r.ratings.length * 10), 0))
-const averageRating = computed(() =>
+const avgRating = computed(() =>
   userRecipes.value.length > 0
-    ? userRecipes.value.reduce((sum, r) => sum + (r.ratings.reduce((s, rating) => s + rating, 0) / r.ratings.length), 0) / userRecipes.value.length
+    ? userRecipes.value.reduce((sum, r) => sum + averageRating(r), 0) / userRecipes.value.length
     : 0
 )
 
@@ -28,8 +31,8 @@ const recentRecipes = computed(() =>
 const popularRecipes = computed(() =>
   [...userRecipes.value]
     .sort((a, b) => {
-      const avgA = a.ratings.reduce((sum, r) => sum + r, 0) / a.ratings.length
-      const avgB = b.ratings.reduce((sum, r) => sum + r, 0) / b.ratings.length
+      const avgA = averageRating(a)
+      const avgB = averageRating(b)
       return avgB - avgA
     })
     .slice(0, 3)
@@ -97,7 +100,7 @@ const activityIcons: Record<string, string> = {
         <div class="stat-card">
           <div class="stat-icon rating">⭐</div>
           <div class="stat-content">
-            <h3>{{ averageRating.toFixed(1) }}</h3>
+            <h3>{{ avgRating.toFixed(1) }}</h3>
             <p>Average Rating</p>
           </div>
         </div>
@@ -134,12 +137,12 @@ const activityIcons: Record<string, string> = {
           <div class="recipes-list">
             <template v-if="recentRecipes.length > 0">
               <div v-for="recipe in recentRecipes" :key="recipe.id" class="recipe-item">
-                <img :src="recipe.images[0] || '/_/images/placeholder-recipe.jpg'" :alt="recipe.title" />
+                <img :src="recipe.images[0] || '/_/images/placeholder-recipe.png'" :alt="recipe.title" />
                 <div class="recipe-info">
                   <h4><a :href="`/recipe/${recipe.id}`">{{ recipe.title }}</a></h4>
                   <p>{{ recipe.description }}</p>
                   <div class="recipe-meta">
-                    <span>⭐ {{ (recipe.ratings.reduce((sum: number, r: number) => sum + r, 0) / recipe.ratings.length).toFixed(1) }}</span>
+                    <span>⭐ {{ averageRating(recipe).toFixed(1) }}</span>
                     <span>👁️ {{ recipe.ratings.length * 10 }}</span>
                     <span>🕒 {{ recipe.cookTime }}min</span>
                   </div>
@@ -166,11 +169,11 @@ const activityIcons: Record<string, string> = {
             <template v-if="popularRecipes.length > 0">
               <div v-for="(recipe, index) in popularRecipes" :key="recipe.id" class="popular-item">
                 <div class="rank">#{{ index + 1 }}</div>
-                <img :src="recipe.images[0] || '/_/images/placeholder-recipe.jpg'" :alt="recipe.title" />
+                <img :src="recipe.images[0] || '/_/images/placeholder-recipe.png'" :alt="recipe.title" />
                 <div class="popular-info">
                   <h4><a :href="`/recipe/${recipe.id}`">{{ recipe.title }}</a></h4>
                   <div class="popular-stats">
-                    <span>⭐ {{ (recipe.ratings.reduce((sum: number, r: number) => sum + r, 0) / recipe.ratings.length).toFixed(1) }}</span>
+                    <span>⭐ {{ averageRating(recipe).toFixed(1) }}</span>
                     <span>👁️ {{ recipe.ratings.length * 10 }}</span>
                   </div>
                 </div>

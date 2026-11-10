@@ -2,6 +2,7 @@
 import { ref, computed, reactive } from 'vue'
 import AppLayout from '../components/layout/AppLayout.vue'
 import { recipesStore } from '../stores/recipes'
+import { describeError } from '../lib/api/errors'
 import { router } from '../router'
 import type { Ingredient, Instruction, Recipe } from '../lib/api/types'
 
@@ -122,12 +123,16 @@ async function submitRecipe() {
         fiber: Math.round(2 + Math.random() * 10),
         sugar: Math.round(1 + Math.random() * 15)
       },
-      images: images.value.length > 0 ? [...images.value] : ['/_/images/placeholder-recipe.jpg'],
+      images: images.value.length > 0 ? [...images.value] : ['/_/images/placeholder-recipe.png'],
       author: 'John Doe',
       ratings: []
     }
 
-    await recipesStore.addRecipe(newRecipe)
+    const failure = await recipesStore.addRecipe(newRecipe)
+    if (failure) {
+      error.value = describeError(failure)
+      return
+    }
     router.navigate('/dashboard')
   } catch {
     error.value = 'Failed to create recipe. Please try again.'

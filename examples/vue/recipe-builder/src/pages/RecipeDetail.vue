@@ -1,12 +1,13 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watchEffect } from 'vue'
 import AppLayout from '../components/layout/AppLayout.vue'
 import { recipesStore } from '../stores/recipes'
+import { averageRating } from '../lib/rating'
 
 const props = defineProps<{ id: string }>()
 
 const recipe = computed(() => recipesStore.recipes.find(r => r.id === props.id))
-const averageRating = computed(() => recipe.value ? recipe.value.ratings.reduce((sum, r) => sum + r, 0) / recipe.value.ratings.length : 0)
+const avgRating = computed(() => recipe.value ? averageRating(recipe.value) : 0)
 const totalTime = computed(() => recipe.value ? recipe.value.prepTime + recipe.value.cookTime : 0)
 
 const activeTab = ref<'ingredients' | 'instructions' | 'nutrition'>('ingredients')
@@ -19,8 +20,17 @@ const scaledIngredients = computed(() =>
   })) : []
 )
 
-onMounted(() => {
-  if (recipe.value) {
+// A deep link opens this page before the list is loaded: fetch just this recipe.
+const missing = ref(false)
+onMounted(async () => {
+  if (!recipe.value) missing.value = (await recipesStore.loadRecipe(props.id)) !== null
+})
+
+// Start with the recipe's own servings, once per recipe (not again when the list reloads).
+let scaledFor = ''
+watchEffect(() => {
+  if (recipe.value && scaledFor !== recipe.value.id) {
+    scaledFor = recipe.value.id
     servings.value = recipe.value.servings
   }
 })
@@ -37,7 +47,7 @@ onMounted(() => {
       <!-- Recipe Header -->
       <div class="recipe-header">
         <div class="recipe-image">
-          <img :src="recipe.images[0] || '/_/images/placeholder-recipe.jpg'" :alt="recipe.title" />
+          <img :src="recipe.images[0] || '/_/images/placeholder-recipe.png'" :alt="recipe.title" />
           <div class="recipe-badges">
             <span :class="['difficulty-badge', recipe.difficulty]">{{ recipe.difficulty }}</span>
             <span v-for="tag in recipe.dietaryTags" :key="tag" class="diet-badge">{{ tag }}</span>
@@ -51,7 +61,7 @@ onMounted(() => {
           <div class="recipe-meta">
             <div class="meta-item">
               <span class="label">Rating</span>
-              <span class="value">⭐ {{ averageRating.toFixed(1) }} ({{ recipe.ratings.length }} reviews)</span>
+              <span class="value">⭐ {{ avgRating.toFixed(1) }} ({{ recipe.ratings.length }} reviews)</span>
             </div>
             <div class="meta-item">
               <span class="label">Prep Time</span>
@@ -168,11 +178,12 @@ onMounted(() => {
       </div>
     </div>
 
-    <div v-else class="recipe-not-found">
+    <div v-else-if="missing" class="recipe-not-found">
       <h1>Recipe Not Found</h1>
       <p>The recipe you're looking for doesn't exist or has been removed.</p>
       <a href="/recipes" class="btn-primary">Browse All Recipes</a>
     </div>
+    <p v-else class="recipe-loading">Loading recipe…</p>
   </AppLayout>
 </template>
 

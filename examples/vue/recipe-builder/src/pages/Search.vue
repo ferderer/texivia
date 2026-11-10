@@ -1,7 +1,11 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watchEffect } from 'vue'
 import AppLayout from '../components/layout/AppLayout.vue'
 import { recipesStore } from '../stores/recipes'
+import { api } from '../lib/api'
+import { describeError } from '../lib/api/errors'
+import { averageRating } from '../lib/rating'
+import type { Recipe, RecipeSearch } from '../lib/api/types'
 
 const searchQuery = ref('')
 const selectedCuisine = ref('')
@@ -12,50 +16,36 @@ const viewMode = ref<'grid' | 'list'>('grid')
 
 const cuisines = computed(() => [...new Set(recipesStore.recipes.map(r => r.cuisine))].sort())
 const difficulties = computed(() => [...new Set(recipesStore.recipes.map(r => r.difficulty))])
-const maxAvailableCookTime = computed(() => Math.max(...recipesStore.recipes.map(r => r.cookTime)))
+const maxAvailableCookTime = computed(() => Math.max(0, ...recipesStore.recipes.map(r => r.cookTime)))
 
-const searchResults = computed(() =>
-  recipesStore.recipes
-    .filter(recipe => {
-      if (searchQuery.value.trim()) {
-        const query = searchQuery.value.toLowerCase()
-        return (
-          recipe.title.toLowerCase().includes(query) ||
-          recipe.description.toLowerCase().includes(query) ||
-          recipe.cuisine.toLowerCase().includes(query) ||
-          recipe.ingredients.some(ing => ing.name.toLowerCase().includes(query)) ||
-          recipe.dietaryTags.some(tag => tag.toLowerCase().includes(query))
-        )
-      }
-      return true
-    })
-    .filter(recipe => !selectedCuisine.value || recipe.cuisine === selectedCuisine.value)
-    .filter(recipe => !selectedDifficulty.value || recipe.difficulty === selectedDifficulty.value)
-    .filter(recipe => !maxCookTime.value || recipe.cookTime <= maxCookTime.value)
-    .sort((a, b) => {
-      switch (sortBy.value) {
-        case 'relevance':
-          if (searchQuery.value.trim()) {
-            const query = searchQuery.value.toLowerCase()
-            const aInTitle = a.title.toLowerCase().includes(query) ? 1 : 0
-            const bInTitle = b.title.toLowerCase().includes(query) ? 1 : 0
-            if (aInTitle !== bInTitle) return bInTitle - aInTitle
-          }
-          return 0
-        case 'rating': {
-          const avgA = a.ratings.reduce((sum, r) => sum + r, 0) / a.ratings.length
-          const avgB = b.ratings.reduce((sum, r) => sum + r, 0) / b.ratings.length
-          return avgB - avgA
-        }
-        case 'cookTime':
-          return a.cookTime - b.cookTime
-        case 'title':
-          return a.title.localeCompare(b.title)
-        default:
-          return 0
-      }
-    })
-)
+// The server does the searching (GET /api/recipes/search). Typing is debounced, and a newer
+// search cancels the one still running (AbortSignal), so a slow answer never overwrites a fresh one.
+const searchResults = ref<Recipe[]>([])
+const searching = ref(false)
+const searchError = ref('')
+
+watchEffect((onCleanup) => {
+  const params: RecipeSearch = {
+    query: searchQuery.value.trim(),
+    cuisine: selectedCuisine.value,
+    difficulty: (selectedDifficulty.value || undefined) as RecipeSearch['difficulty'],
+    maxCookTime: maxCookTime.value || undefined,
+    sort: sortBy.value,
+  }
+  const controller = new AbortController()
+  searching.value = true
+  const timer = setTimeout(async () => {
+    const { payload, error } = await api.recipes.search(params, controller.signal)
+    if (controller.signal.aborted) return
+    searching.value = false
+    searchError.value = error ? describeError(error) : ''
+    if (!error) searchResults.value = payload ?? []
+  }, 250)
+  onCleanup(() => {
+    clearTimeout(timer)
+    controller.abort()
+  })
+})
 
 function clearFilters() {
   searchQuery.value = ''
@@ -66,6 +56,7 @@ function clearFilters() {
 }
 
 onMounted(() => {
+  recipesStore.ensureLoaded() // for the filter lists
   const params = new URLSearchParams(window.location.search)
   const q = params.get('q')
   if (q) {
@@ -171,7 +162,7 @@ onMounted(() => {
             <template v-if="searchResults.length > 0">
               <a v-for="recipe in searchResults" :key="recipe.id" :href="`/recipe/${recipe.id}`" :class="['result-card', viewMode]">
                 <div class="result-image">
-                  <img :src="recipe.images[0] || '/_/images/placeholder-recipe.jpg'" :alt="recipe.title" />
+                  <img :src="recipe.images[0] || '/_/images/placeholder-recipe.png'" :alt="recipe.title" />
                   <div class="result-difficulty">{{ recipe.difficulty }}</div>
                 </div>
                 <div class="result-info">
@@ -180,7 +171,7 @@ onMounted(() => {
                   <div class="result-meta">
                     <span class="cuisine">{{ recipe.cuisine }}</span>
                     <span class="cook-time">🕒 {{ recipe.cookTime }}min</span>
-                    <span class="rating">⭐ {{ (recipe.ratings.reduce((sum: number, r: number) => sum + r, 0) / recipe.ratings.length).toFixed(1) }}</span>
+                    <span class="rating">⭐ {{ averageRating(recipe).toFixed(1) }}</span>
                   </div>
                   <div v-if="recipe.dietaryTags.length > 0" class="dietary-tags">
                     <span v-for="tag in recipe.dietaryTags" :key="tag" class="tag">{{ tag }}</span>
@@ -189,12 +180,19 @@ onMounted(() => {
               </a>
             </template>
             <div v-else class="no-results">
-              <h3>No recipes found</h3>
-              <template v-if="searchQuery || selectedCuisine || selectedDifficulty || maxCookTime">
-                <p>Try adjusting your search terms or filters</p>
-                <button @click="clearFilters" class="btn-primary">Clear Filters</button>
+              <h3 v-if="searching">Searching…</h3>
+              <template v-else-if="searchError">
+                <h3>Search failed</h3>
+                <p>{{ searchError }}</p>
               </template>
-              <p v-else>Start by searching for recipes, ingredients, or cuisines</p>
+              <template v-else>
+                <h3>No recipes found</h3>
+                <template v-if="searchQuery || selectedCuisine || selectedDifficulty || maxCookTime">
+                  <p>Try adjusting your search terms or filters</p>
+                  <button @click="clearFilters" class="btn-primary">Clear Filters</button>
+                </template>
+                <p v-else>Start by searching for recipes, ingredients, or cuisines</p>
+              </template>
             </div>
           </div>
         </main>

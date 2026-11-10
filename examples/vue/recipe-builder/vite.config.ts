@@ -12,6 +12,10 @@ export default defineConfig({
     vueJsx(),
     vueDevTools(),
   ],
+  server: {
+    // the apps call /api on their own origin; the backend (examples/recipe-api) listens on 8080
+    proxy: { '/api': 'http://localhost:8080' },
+  },
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url))
