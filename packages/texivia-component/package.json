@@ -1,6 +1,6 @@
 {
   "name": "texivia-component",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Component factory with reactive state, @bind, and event delegation — part of the Texivia ecosystem",
   "author": "Vadim Ferderer (https://ferderer.de/)",
   "license": "Apache-2.0",
@@ -23,7 +23,7 @@
   "keywords": ["component", "reactive", "bind", "spa", "texivia"],
   "repository": { "type": "git", "url": "https://github.com/ferderer/texivia.git" },
   "dependencies": {
-    "texivia-reactive": "^1.0.0"
+    "texivia-reactive": "^1.0.1"
   },
   "devDependencies": {
     "terser":     "^5.39.0",

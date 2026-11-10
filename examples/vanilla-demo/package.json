@@ -10,9 +10,9 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "texivia-router":    "^1.0.0",
-    "texivia-component": "^1.0.0",
-    "texivia-fetch":     "^1.0.0"
+    "texivia-router":    "^1.1.0",
+    "texivia-component": "^1.0.1",
+    "texivia-fetch":     "^1.0.1"
   },
   "devDependencies": {
     "vite": "^5.4.8"

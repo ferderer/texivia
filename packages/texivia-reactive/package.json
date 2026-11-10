@@ -1,6 +1,6 @@
 {
   "name": "texivia-reactive",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Proxy-based reactive state with batch() — part of the Texivia ecosystem",
   "author": "Vadim Ferderer (https://ferderer.de/)",
   "license": "Apache-2.0",
