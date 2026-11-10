@@ -27,6 +27,7 @@ The app creates the router instance in its own module (e.g. `src/router.ts`) and
 * Good: works with any framework or none; the router can be tested without a UI.
 * Good: the route table is visible in one place, in a defined order.
 * Bad: the app root needs a few lines of glue (listen, store view and params, render).
+* The event for the current URL is dispatched during `start()`, so the listener must be registered **before** `router.start()`; with the listener added afterwards the first page is never rendered.
 
 ### Options not chosen
 
