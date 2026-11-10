@@ -130,6 +130,10 @@ use(payload);
 ## Examples
 
 - [`examples/vanilla-demo`](./examples/vanilla-demo) — counter, recipe detail (async load + abort), contact form (all `@bind` variants)
+- [`examples/svelte`](./examples/svelte) — Svelte 5 (no SvelteKit): `micro` and the `recipe-builder` sample app
+- [`examples/vue`](./examples/vue) — Vue 3: `micro` and the `recipe-builder` sample app
+
+The Svelte and Vue examples are standalone projects: build the router first (`npm run build -w packages/texivia-router`), then run `npm ci && npm run dev` in the example folder.
 
 ## Architecture decisions
 
@@ -139,10 +143,12 @@ Architecture decision records will be published here at a later point.
 
 ```bash
 npm install          # install all workspaces
+npm run build        # build all packages (tests import texivia-reactive from its dist/)
 npm test             # run all test suites
-npm run build        # build all packages
 npm run dev          # start vanilla-demo dev server
 ```
+
+Releases are managed with [Changesets](https://github.com/changesets/changesets): run `npx changeset` to describe a change; merging the generated "Version Packages" pull request publishes the changed packages to npm.
 
 ## License
 
