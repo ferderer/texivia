@@ -42,12 +42,12 @@ const router = new Router([
   { path: '*', view: NotFound }
 ]);
 
-router.start();
-
 document.addEventListener('texivia', (e) => {
   const { view, params, search, hash } = e.detail;
   // render your app — view is whatever you put in the config
 });
+
+router.start(); // after the listener: the first event is dispatched right away
 ```
 
 That's it. No providers, no wrappers, no context.
@@ -86,8 +86,8 @@ export const router = new Router<Component<any>>([
   }
 
   onMount(() => {
-    router.start();
     document.addEventListener('texivia', onNavigate as EventListener);
+    router.start();
     return () => {
       router.stop();
       document.removeEventListener('texivia', onNavigate as EventListener);
@@ -165,8 +165,8 @@ function onNavigate(event: Event) {
 }
 
 onMounted(() => {
-  router.start();
   document.addEventListener('texivia', onNavigate);
+  router.start();
 });
 
 onUnmounted(() => {
@@ -340,7 +340,7 @@ Throws on malformed paths, double slashes and duplicate parameter names.
 
 ### `router.start(): Promise<void>`
 
-Starts the router. Attaches the `popstate` and `click` listeners and navigates to the current URL (without adding a history entry).
+Starts the router. Attaches the `popstate` and `click` listeners and navigates to the current URL (without adding a history entry). The event for the current URL is dispatched during this call, so **add the `texivia` listener before calling `start()`**; otherwise the first page is never rendered.
 
 ### `router.stop(): void`
 

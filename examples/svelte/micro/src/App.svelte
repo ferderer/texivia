@@ -12,8 +12,8 @@
   }
 
   onMount(() => {
-    router.start();
     document.addEventListener('texivia', navigate as EventListener);
+    router.start();
 
     return () => {
       router.stop();

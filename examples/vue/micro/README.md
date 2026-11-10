@@ -33,7 +33,7 @@ function navigate(event: Event) {
   params.value = detail.params ?? {}
 }
 
-onMounted(() => { router.start(); document.addEventListener('texivia', navigate) })
+onMounted(() => { document.addEventListener('texivia', navigate); router.start() })
 onUnmounted(() => { router.stop(); document.removeEventListener('texivia', navigate) })
 </script>
 

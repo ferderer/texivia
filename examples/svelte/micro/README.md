@@ -33,8 +33,8 @@ Routes are defined in `src/router.ts` using `Router<Component>`. The `App.svelte
   }
 
   onMount(() => {
-    router.start();
     document.addEventListener('texivia', navigate as EventListener);
+    router.start();
     return () => {
       router.stop();
       document.removeEventListener('texivia', navigate as EventListener);

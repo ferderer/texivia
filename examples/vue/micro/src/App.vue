@@ -13,8 +13,8 @@ function navigate(event: Event) {
 }
 
 onMounted(() => {
-  router.start()
   document.addEventListener('texivia', navigate)
+  router.start()
 })
 
 onUnmounted(() => {
