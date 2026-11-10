@@ -137,12 +137,14 @@ use(payload);
 | 2xx with JSON body | `{ payload, error: null }` |
 | 2xx with empty body (e.g. 204) | `{ payload: null, error: null }` |
 | 2xx with a body that is not JSON | error `E_INVALID_JSON` |
-| non-2xx with an `ApiError` tuple as body | that tuple |
+| non-2xx with a recognised error body (see below) | that error as `ApiError` |
 | any other non-2xx | error `E_HTTP_ERROR` |
 | aborted via `signal` | error `E_ABORTED`, status `0` |
 | network failure | error `E_NETWORK_ERROR`, status `500` |
 
 The HTTP status is kept in `error[1]` for all HTTP responses.
+
+Recognised error bodies: the tuple `[timestamp, status, code, data, fields?]`, [Guard4j](https://github.com/ferderer/guard4j)'s response `{ timestamp, status, error: { name, code, … }, data, fields }` (the code is `error.name`), and a plain `{ error: 'CODE', data? }`. Field errors are `{ code, path, value }`. For any other format pass `parseError` (see the package README).
 
 All packages ship ES modules (`import`) and CommonJS (`require`), each with matching type declarations.
 

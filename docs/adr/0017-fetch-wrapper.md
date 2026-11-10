@@ -17,14 +17,14 @@ Data fetching needs a consistent error shape, cancellation when the user navigat
 
 ## Decision Outcome
 
-Chosen option: **`apiFetch<T>(endpoint, data?, { method?, signal?, headers? })`**, returning `{ payload: T | null, error: ApiError | null }`. `ApiError` is the tuple `[timestamp, status, code, data, fields?]`, a compact error envelope a server can send directly. Defaults: `POST`, JSON body, `credentials: 'include'`.
+Chosen option: **`apiFetch<T>(endpoint, data?, { method?, signal?, headers?, parseError? })`**, returning `{ payload: T | null, error: ApiError | null }`. `ApiError` is the tuple `[timestamp, status, code, data, fields?]`: the five fields of [Guard4j](https://github.com/ferderer/guard4j)'s error response in order, with the error's stable name as code. Servers do not have to send a tuple: the client recognises the tuple, Guard4j's response object and a plain `{ error: 'CODE', data? }`, and normalises them; `options.parseError` reads any other format. Field errors are `{ code, path, value }`. Defaults: `POST`, JSON body, `credentials: 'include'`.
 
 | Response | Result |
 |---|---|
 | 2xx with JSON | `payload` |
 | 2xx with empty body (e.g. 204) | `payload: null`, `error: null` |
 | 2xx, body not JSON | `E_INVALID_JSON` |
-| non-2xx with an ApiError body | that tuple |
+| non-2xx with a recognised error body | that error as tuple |
 | other non-2xx | `E_HTTP_ERROR` |
 | aborted via `signal` | `E_ABORTED`, status 0 |
 | network failure | `E_NETWORK_ERROR`, status 500 |
@@ -35,7 +35,7 @@ HTTP responses keep their status. Components pass `ctx.signal` (aborted on unmou
 
 * Good: the return type forces callers to handle both outcomes; cancellation is not shown as an error.
 * Bad: `POST` by default is unusual; read endpoints set `method: 'GET'`.
-* Bad: servers with another error format get `E_HTTP_ERROR` without details.
+* Bad: a server with an unknown error format gets `E_HTTP_ERROR` without details until `parseError` is set. The `message` of an error body is not kept; the UI renders by code.
 * No retry, timeout or streaming.
 
 ### Options not chosen
