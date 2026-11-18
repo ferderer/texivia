@@ -1,5 +1,11 @@
 # texivia-router
 
+## 1.1.1
+
+### Patch Changes
+
+- 79730e9: README: add the `texivia` listener **before** calling `router.start()`. `start()` dispatches the event for the current URL during the call, so with the listener added afterwards the first page is never rendered (a reload or deep link showed the start page). The Quick Start and the Svelte and Vue examples had the wrong order.
+
 ## 1.1.0
 
 ### Minor Changes

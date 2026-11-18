@@ -1,6 +1,6 @@
 {
   "name": "texivia-fetch",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "description": "Typed fetch wrapper with structured error handling — part of the Texivia ecosystem",
   "author": "Vadim Ferderer (https://ferderer.de/)",
   "license": "Apache-2.0",
